@@ -14,6 +14,17 @@
  */
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { readFileSync } from "node:fs";
+
+// Carrega o .env caso o seed seja rodado direto (tsx não lê .env sozinho).
+try {
+  for (const line of readFileSync(".env", "utf8").split(/\r?\n/)) {
+    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*"?([^"\r\n]*)"?/);
+    if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
+  }
+} catch {
+  /* sem .env: usa variáveis já definidas no ambiente */
+}
 
 const prisma = new PrismaClient();
 
