@@ -11,9 +11,14 @@ export type SessionUser = {
 
 /** Retorna o usuário autenticado (ou null) em server components / actions. */
 export async function getCurrentUser(): Promise<SessionUser | null> {
-  const session = await auth();
-  if (!session?.user) return null;
-  return session.user as SessionUser;
+  try {
+    const session = await auth();
+    if (!session?.user) return null;
+    return session.user as SessionUser;
+  } catch {
+    // Ex.: AUTH_SECRET ausente em um primeiro deploy. Trata como deslogado.
+    return null;
+  }
 }
 
 /** Garante autenticação; lança se não houver usuário. */
