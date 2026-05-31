@@ -27,7 +27,7 @@ ComerziaHub reúne, em um só sistema, um **controle de estoque**, um **aplicati
 
 - **[Next.js 15](https://nextjs.org/)** (App Router) — frontend + backend (Server Components, Server Actions, Route Handlers)
 - **TypeScript**
-- **[Prisma ORM](https://www.prisma.io/)** + **PostgreSQL**
+- **[Prisma ORM](https://www.prisma.io/)** + **MySQL / MariaDB** (compatível com **XAMPP/phpMyAdmin**; PostgreSQL também funciona trocando o `provider` em `schema.prisma`)
 - **[Auth.js / NextAuth v5](https://authjs.dev/)** — autenticação por credenciais com papéis (RBAC) e proteção de rotas via middleware
 - **[Tailwind CSS](https://tailwindcss.com/)** — identidade visual própria, responsiva
 - **[Zod](https://zod.dev/)** — validação de dados
@@ -100,7 +100,7 @@ Cada papel tem permissões e painel próprios (protegidos por middleware):
 
 ### Pré-requisitos
 - **Node.js 18.18+** (recomendado 20 ou 22)
-- **PostgreSQL** (local, Docker, Neon, Supabase ou Vercel Postgres)
+- **MySQL 8 / MariaDB 10.4+** — ex.: **XAMPP** (phpMyAdmin) rodando localmente. Para produção: PlanetScale, Railway, Aiven, etc.
 
 ### Passos
 
@@ -127,13 +127,12 @@ npm run dev
 
 Acesse **http://localhost:3000**.
 
-### Postgres local com Docker (opcional)
+### Banco com XAMPP (phpMyAdmin)
 
-```bash
-docker run --name comerziahub-db -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_DB=comerziahub -p 5432:5432 -d postgres:16
-```
-`DATABASE_URL="postgresql://postgres:postgres@localhost:5432/comerziahub?schema=public"`
+1. No **XAMPP Control Panel**, dê **Start** em **Apache** e **MySQL**.
+2. Em http://localhost/phpmyadmin crie um banco **`estoque_delivery`** (collation `utf8mb4_unicode_ci`).
+3. No `.env`: `DATABASE_URL="mysql://root@localhost:3306/estoque_delivery"` *(root sem senha é o padrão do XAMPP)*.
+4. `npm run db:push` cria as tabelas e `npm run db:seed` popula os dados — visíveis depois no phpMyAdmin.
 
 ---
 
@@ -159,7 +158,7 @@ Copie `.env.example` para `.env`. Principais:
 
 | Variável | Obrigatória | Descrição |
 |----------|:----------:|-----------|
-| `DATABASE_URL` | ✅ | String de conexão PostgreSQL |
+| `DATABASE_URL` | ✅ | String de conexão MySQL/MariaDB (ex.: `mysql://root@localhost:3306/estoque_delivery`) |
 | `AUTH_SECRET` | ✅ | Segredo do Auth.js (`npx auth secret`) |
 | `AUTH_URL` / `NEXTAUTH_URL` | ⚠️ | URL pública (produção) |
 | `NEXT_PUBLIC_APP_URL` | — | URL pública do app |
@@ -167,16 +166,16 @@ Copie `.env.example` para `.env`. Principais:
 | `UPLOAD_PROVIDER` | — | Provedor de upload (futuro) |
 | `PAYMENT_PROVIDER` | — | Gateway de pagamento (futuro) |
 
-> O app é resiliente: as páginas públicas renderizam mesmo sem banco configurado (mostram estados vazios), permitindo um primeiro deploy antes de conectar o PostgreSQL.
+> O app é resiliente: as páginas públicas renderizam mesmo sem banco configurado (mostram estados vazios), permitindo um primeiro deploy antes de conectar o banco.
 
 ---
 
 ## ▲ Deploy na Vercel
 
 1. **Importe o repositório** do GitHub na Vercel (framework detectado automaticamente: Next.js).
-2. **Banco de dados**: crie um Postgres (Vercel Postgres, Neon ou Supabase) e copie a connection string.
+2. **Banco de dados**: provisione um **MySQL** gerenciado (PlanetScale, Railway, Aiven…) e copie a connection string.
 3. **Variáveis de ambiente** no projeto da Vercel:
-   - `DATABASE_URL` = sua connection string (com `sslmode=require`)
+   - `DATABASE_URL` = sua connection string MySQL (provedores gerenciados costumam exigir SSL, ex.: `?sslaccept=strict`)
    - `AUTH_SECRET` = segredo aleatório
    - `AUTH_URL` / `NEXTAUTH_URL` = URL do deploy (ex.: `https://comerziahub.vercel.app`)
 4. **Build**: o comando padrão (`prisma generate && next build`) já está em `package.json`.

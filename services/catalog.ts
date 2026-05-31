@@ -51,7 +51,7 @@ export async function listStores(opts: { q?: string; segment?: string }) {
           status: "ACTIVE",
           ...(segment ? { segment } : {}),
           ...(q
-            ? { name: { contains: q, mode: "insensitive" as const } }
+            ? { name: { contains: q } }
             : {}),
         },
         orderBy: { ratingAvg: "desc" },
@@ -134,7 +134,7 @@ export async function searchProducts(opts: {
         where: {
           status: "ACTIVE",
           ...(categoryId ? { categoryId } : {}),
-          ...(q ? { name: { contains: q, mode: "insensitive" as const } } : {}),
+          ...(q ? { name: { contains: q } } : {}),
           ...(minPrice || maxPrice
             ? {
                 basePrice: {
