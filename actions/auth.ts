@@ -30,6 +30,15 @@ export async function loginAction(
 
   const callbackUrl = (formData.get("callbackUrl") as string) || "/continue";
 
+  // Mensagem clara quando o banco está fora (em vez de "senha incorreta").
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+  } catch {
+    return {
+      error: "Banco de dados indisponível no momento. Tente novamente em instantes.",
+    };
+  }
+
   try {
     await signIn("credentials", {
       email: parsed.data.email,
@@ -66,21 +75,31 @@ export async function registerAction(
   const { name, email, password, role, phone } = parsed.data;
   const normalizedEmail = email.toLowerCase();
 
-  const existing = await prisma.user.findUnique({
-    where: { email: normalizedEmail },
-  });
-  if (existing) {
-    return { error: "Já existe uma conta com este e-mail." };
-  }
+  // Toda a escrita no banco é protegida: uma falha de conexão vira mensagem
+  // amigável em vez de erro 500 na tela de cadastro.
+  try {
+    const existing = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
+    if (existing) {
+      return { error: "Já existe uma conta com este e-mail." };
+    }
 
-  const passwordHash = await bcrypt.hash(password, 10);
-  const user = await prisma.user.create({
-    data: { name, email: normalizedEmail, passwordHash, role, phone },
-  });
+    const passwordHash = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({
+      data: { name, email: normalizedEmail, passwordHash, role, phone },
+    });
 
-  // Cria o perfil de entregador automaticamente.
-  if (role === "COURIER") {
-    await prisma.courierProfile.create({ data: { userId: user.id } });
+    // Cria o perfil de entregador automaticamente.
+    if (role === "COURIER") {
+      await prisma.courierProfile.create({ data: { userId: user.id } });
+    }
+  } catch (error) {
+    console.error("[registerAction]", error);
+    return {
+      error:
+        "Não foi possível concluir o cadastro agora (banco indisponível). Tente novamente em instantes.",
+    };
   }
 
   try {
