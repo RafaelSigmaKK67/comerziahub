@@ -8,6 +8,7 @@ import { Menu, X, ArrowLeft } from "lucide-react";
 import { NAVS, type NavKey, type NavLink as NavLinkType } from "@/lib/nav";
 import { Logo } from "@/components/brand/logo";
 import { UserMenu } from "./user-menu";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
 function NavList({
@@ -110,7 +111,8 @@ export function DashboardShell({
           >
             <ArrowLeft className="h-4 w-4" /> Ir para a plataforma
           </Link>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle />
             <UserMenu user={user} />
           </div>
         </header>

@@ -40,6 +40,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        {/* Aplica o tema antes da pintura para evitar "flash". Padrão: escuro. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var t=localStorage.getItem('theme');if(t==='light'){document.documentElement.classList.remove('dark');}else{document.documentElement.classList.add('dark');}}catch(e){document.documentElement.classList.add('dark');}})();",
+          }}
+        />
+      </head>
       <body className="min-h-screen font-sans">
         <Providers>{children}</Providers>
       </body>

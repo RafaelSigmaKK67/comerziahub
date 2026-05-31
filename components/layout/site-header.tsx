@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/session";
 import { getCartItemCount } from "@/services/cart";
 import { UserMenu } from "./user-menu";
 import { MobileMenu } from "./mobile-menu";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const navLinks = [
   { label: "Marketplace", href: "/marketplace" },
@@ -49,6 +50,7 @@ export async function SiteHeader() {
         </form>
 
         <div className="ml-auto flex items-center gap-1.5 md:ml-3">
+          <ThemeToggle />
           <Link
             href="/cart"
             className="relative rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"

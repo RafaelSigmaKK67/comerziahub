@@ -449,6 +449,64 @@ async function main() {
   });
   await prisma.post.update({ where: { id: post1.id }, data: { commentCount: 1 } });
 
+  console.log("→ Cupons");
+  await prisma.coupon.createMany({
+    data: [
+      { storeId: storeIds[0], code: "BEMVINDO10", description: "10% na primeira compra", type: "PERCENT", value: 10, minOrderValue: 20, active: true },
+      { storeId: storeIds[1], code: "FRETEGRATIS", description: "Frete grátis acima de R$ 50", type: "FREE_SHIPPING", value: 0, minOrderValue: 50, active: true },
+      { storeId: storeIds[2], code: "MODA15", description: "R$ 15 de desconto em moda", type: "FIXED", value: 15, minOrderValue: 80, active: true },
+    ],
+    skipDuplicates: true,
+  });
+
+  console.log("→ Emblemas de fidelidade");
+  const badgeFiel = await prisma.badge.create({
+    data: { storeId: storeIds[0], name: "Cliente Fiel", description: "Comprou mais de uma vez nesta loja.", iconUrl: img("badge-fiel") },
+  });
+  const badgePioneiro = await prisma.badge.create({
+    data: { name: "Pioneiro", description: "Entre os primeiros usuários da plataforma.", iconUrl: img("badge-pioneiro") },
+  });
+  await prisma.userBadge.createMany({
+    data: [
+      { userId: customer.id, badgeId: badgeFiel.id },
+      { userId: customer.id, badgeId: badgePioneiro.id },
+      { userId: customer2.id, badgeId: badgePioneiro.id },
+    ],
+    skipDuplicates: true,
+  });
+
+  console.log("→ Transações de cashback");
+  const order1 = await prisma.order.findUnique({ where: { code: "CMZ-DEMO01" } });
+  if (order1) {
+    await prisma.cashbackTransaction.create({
+      data: {
+        userId: customer.id,
+        storeId: storeIds[0],
+        orderId: order1.id,
+        type: "EARNED",
+        status: "AVAILABLE",
+        amount: order1.cashbackEarned,
+        availableAt: new Date(),
+        expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+      },
+    });
+  }
+
+  console.log("→ Conversa comprador × vendedor");
+  await prisma.conversation.create({
+    data: {
+      participants: { create: [{ userId: customer.id }, { userId: owner2.id }] },
+      messages: {
+        create: [
+          { senderId: customer.id, content: "Olá! O X-Burger Artesanal ainda está na promoção?", createdAt: new Date(Date.now() - 4 * 60000) },
+          { senderId: owner2.id, content: "Oi! Sim 😄 válida até o fim de semana, com 5% de cashback.", createdAt: new Date(Date.now() - 3 * 60000) },
+          { senderId: customer.id, content: "Perfeito! Vou pedir agora mesmo. Obrigado!", createdAt: new Date(Date.now() - 2 * 60000) },
+          { senderId: owner2.id, content: "Maravilha! Qualquer dúvida é só chamar. 🚀", createdAt: new Date(Date.now() - 1 * 60000) },
+        ],
+      },
+    },
+  });
+
   console.log("✔ Seed concluído com sucesso.");
 }
 

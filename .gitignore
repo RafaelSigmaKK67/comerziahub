@@ -35,6 +35,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# claude code tooling (machine-specific paths)
+.claude/
+
 # typescript
 *.tsbuildinfo
 
