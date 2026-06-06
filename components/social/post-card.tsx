@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MessageCircle, Share2, Store as StoreIcon } from "lucide-react";
+import { MessageCircle, Share2 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { SmartImage } from "@/components/ui/smart-image";
@@ -33,7 +33,7 @@ export function PostCard({ post, liked }: { post: FeedPost; liked: boolean }) {
         {post.store ? (
           <Link href={`/store/${post.store.slug}`} className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-brand-600">
-              <SmartImage src={post.store.logoUrl} alt={post.store.name} icon={StoreIcon} className="h-full w-full object-cover" />
+              <SmartImage src={post.store.logoUrl} alt={post.store.name} iconName="store" className="h-full w-full object-cover" />
             </span>
             <div>
               <p className="text-sm font-semibold text-slate-900">{post.store.name}</p>

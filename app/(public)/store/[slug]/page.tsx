@@ -43,7 +43,7 @@ export default async function StorePage({
         <div className="-mt-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex items-end gap-4">
             <span className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-3xl border-4 border-white bg-brand-100 text-brand-600 shadow-card">
-              <SmartImage src={store.logoUrl} alt={store.name} icon={StoreIcon} className="h-full w-full object-cover" />
+              <SmartImage src={store.logoUrl} alt={store.name} iconName="store" className="h-full w-full object-cover" />
             </span>
             <div className="pb-1">
               <div className="flex items-center gap-2">

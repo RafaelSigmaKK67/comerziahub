@@ -1,11 +1,28 @@
 "use client";
 
 import { useState } from "react";
+import { Store, Package, ImageIcon, User, ShoppingBag } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
+ * Mapa de ícones de fallback. Usamos uma CHAVE (string) em vez de receber o
+ * componente do ícone por prop — assim a SmartImage pode ser usada tanto por
+ * Server Components quanto por Client Components (funções/componentes não podem
+ * ser passados de um Server Component para um Client Component).
+ */
+const ICONS = {
+  store: Store,
+  package: Package,
+  image: ImageIcon,
+  user: User,
+  bag: ShoppingBag,
+} as const;
+
+export type SmartImageIcon = keyof typeof ICONS;
+
+/**
  * Imagem com fallback elegante: se a URL estiver vazia, quebrada ou der erro,
- * exibe um placeholder em gradiente da marca com a inicial do título.
+ * exibe um placeholder em gradiente da marca com um ícone ou a inicial do título.
  * Usada em produtos, lojas, banners e publicações.
  */
 export function SmartImage({
@@ -13,18 +30,19 @@ export function SmartImage({
   alt = "",
   className,
   fallbackText,
-  icon: Icon,
+  iconName,
 }: {
   src?: string | null;
   alt?: string;
   className?: string;
   fallbackText?: string | null;
-  icon?: React.ComponentType<{ className?: string }>;
+  iconName?: SmartImageIcon;
 }) {
   const [errored, setErrored] = useState(false);
   const valid = src && src.trim().length > 0 && !errored;
 
   if (!valid) {
+    const Icon = iconName ? ICONS[iconName] : null;
     return (
       <div
         className={cn(
