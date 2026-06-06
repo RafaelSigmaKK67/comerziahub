@@ -28,6 +28,20 @@ export function formatNumber(value: Numeric) {
   return new Intl.NumberFormat("pt-BR").format(toNumber(value));
 }
 
+/** Formata quantidade (inteira ou fracionada) com unidade opcional. Ex.: "0,5 kg". */
+export function formatQuantity(value: Numeric, unitLabel?: string | null) {
+  const n = toNumber(value);
+  const str = Number.isInteger(n)
+    ? n.toString()
+    : n.toLocaleString("pt-BR", { maximumFractionDigits: 3 });
+  return unitLabel && unitLabel !== "un" ? `${str} ${unitLabel}` : str;
+}
+
+/** Percentual formatado. Ex.: 12.5 -> "12,5%". */
+export function formatPercent(value: Numeric, digits = 1) {
+  return `${toNumber(value).toLocaleString("pt-BR", { maximumFractionDigits: digits })}%`;
+}
+
 export function formatDate(date: Date | string, withTime = false) {
   const d = typeof date === "string" ? new Date(date) : date;
   return new Intl.DateTimeFormat("pt-BR", {

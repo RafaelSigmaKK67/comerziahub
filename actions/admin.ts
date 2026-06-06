@@ -11,6 +11,50 @@ async function requireAdmin() {
   return user;
 }
 
+/** Exclui a loja; se houver dados dependentes (FK), suspende em vez de apagar. */
+export async function deleteStore(storeId: string): Promise<void> {
+  const admin = await requireAdmin();
+  if (!admin) return;
+  try {
+    await prisma.store.delete({ where: { id: storeId } });
+  } catch {
+    await prisma.store.update({ where: { id: storeId }, data: { status: "SUSPENDED" } });
+  }
+  revalidatePath("/admin/stores");
+  revalidatePath("/admin");
+}
+
+/** Exclui o usuário; se houver dados dependentes, bane em vez de apagar. */
+export async function deleteUser(userId: string): Promise<void> {
+  const admin = await requireAdmin();
+  if (!admin || admin.id === userId) return;
+  try {
+    await prisma.user.delete({ where: { id: userId } });
+  } catch {
+    await prisma.user.update({ where: { id: userId }, data: { status: "BANNED" } });
+  }
+  revalidatePath("/admin/users");
+}
+
+/** Configurações gerais da plataforma (chave/valor JSON em PlatformSetting). */
+export async function updatePlatformSettings(formData: FormData): Promise<void> {
+  const admin = await requireAdmin();
+  if (!admin) return;
+  const value = {
+    appName: (formData.get("appName") as string) || "ComerziaHub",
+    defaultCommission: Number(formData.get("defaultCommission") ?? 8) || 0,
+    defaultCashback: Number(formData.get("defaultCashback") ?? 5) || 0,
+    supportEmail: (formData.get("supportEmail") as string) || "",
+    about: (formData.get("about") as string) || "",
+  };
+  await prisma.platformSetting.upsert({
+    where: { key: "general" },
+    update: { value },
+    create: { key: "general", value, description: "Configurações gerais" },
+  });
+  revalidatePath("/admin/settings");
+}
+
 export async function setStoreStatus(storeId: string, status: StoreStatus): Promise<void> {
   const admin = await requireAdmin();
   if (!admin) return;

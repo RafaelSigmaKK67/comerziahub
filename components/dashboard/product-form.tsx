@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { createProduct } from "@/actions/store";
 import { Input, Textarea, Select, Label, FieldError } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { UNIT_OPTIONS } from "@/lib/constants";
 
 export function ProductForm({
   categories,
@@ -31,7 +32,7 @@ export function ProductForm({
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <Label htmlFor="basePrice">Preço (R$)</Label>
+          <Label htmlFor="basePrice">Preço de venda (R$)</Label>
           <Input id="basePrice" name="basePrice" type="number" step="0.01" min="0" required />
           <FieldError message={state.fieldErrors?.basePrice?.[0]} />
         </div>
@@ -39,11 +40,31 @@ export function ProductForm({
           <Label htmlFor="promoPrice">Preço promocional (R$)</Label>
           <Input id="promoPrice" name="promoPrice" type="number" step="0.01" min="0" />
         </div>
+        <div>
+          <Label htmlFor="costPrice">Preço de custo (R$)</Label>
+          <Input id="costPrice" name="costPrice" type="number" step="0.01" min="0" placeholder="p/ cálculo de lucro" />
+        </div>
+        <div>
+          <Label htmlFor="unit">Unidade de medida</Label>
+          <Select id="unit" name="unit" defaultValue="UN">
+            {UNIT_OPTIONS.map((u) => (
+              <option key={u.value} value={u.value}>{u.label}</option>
+            ))}
+          </Select>
+        </div>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div>
           <Label htmlFor="stock">Estoque</Label>
-          <Input id="stock" name="stock" type="number" min="0" defaultValue={0} />
+          <Input id="stock" name="stock" type="number" step="0.001" min="0" defaultValue={0} />
+        </div>
+        <div>
+          <Label htmlFor="minQuantity">Qtd. mínima</Label>
+          <Input id="minQuantity" name="minQuantity" type="number" step="0.001" min="0" defaultValue={1} />
+        </div>
+        <div>
+          <Label htmlFor="unitStep">Incremento</Label>
+          <Input id="unitStep" name="unitStep" type="number" step="0.001" min="0" defaultValue={1} />
         </div>
         <div>
           <Label htmlFor="categoryId">Categoria</Label>

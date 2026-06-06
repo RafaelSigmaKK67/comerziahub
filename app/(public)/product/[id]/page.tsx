@@ -3,10 +3,12 @@ import { notFound } from "next/navigation";
 import { Store as StoreIcon, Gift, ShieldCheck, Truck } from "lucide-react";
 import { AddToCart } from "@/components/commerce/add-to-cart";
 import { RatingStars } from "@/components/commerce/rating";
+import { SmartImage } from "@/components/ui/smart-image";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { getProductById } from "@/services/catalog";
-import { effectivePrice, formatCurrency, toNumber } from "@/lib/utils";
+import { effectivePrice, formatCurrency, toNumber, formatQuantity } from "@/lib/utils";
+import { UNIT_LABELS, FRACTIONAL_UNITS } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +29,7 @@ export default async function ProductPage({
     product.status === "OUT_OF_STOCK" ||
     (product.manageStock &&
       product.variants.length === 0 &&
-      product.stock <= 0);
+      toNumber(product.stock) <= 0);
 
   return (
     <div className="container-page py-8">
@@ -43,23 +45,13 @@ export default async function ProductPage({
         {/* Galeria */}
         <div>
           <div className="aspect-square overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-            {images[0].url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={images[0].url} alt={product.name} className="h-full w-full object-cover" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-6xl font-bold text-brand-200">
-                {product.name[0]}
-              </div>
-            )}
+            <SmartImage src={images[0].url} alt={product.name} fallbackText={product.name} className="h-full w-full object-cover" />
           </div>
           {images.length > 1 && (
             <div className="mt-3 grid grid-cols-5 gap-2">
               {images.slice(0, 5).map((im) => (
                 <div key={im.id} className="aspect-square overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
-                  {im.url && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={im.url} alt="" className="h-full w-full object-cover" />
-                  )}
+                  <SmartImage src={im.url} alt="" fallbackText={product.name} className="h-full w-full object-cover" />
                 </div>
               ))}
             </div>
@@ -85,6 +77,9 @@ export default async function ProductPage({
           <div className="mt-5 flex items-baseline gap-3">
             <span className={isPromo ? "text-3xl font-extrabold text-accent-600" : "text-3xl font-extrabold text-slate-900"}>
               {formatCurrency(price)}
+              {FRACTIONAL_UNITS.includes(product.unit) && (
+                <span className="text-base font-medium text-slate-400"> /{UNIT_LABELS[product.unit]}</span>
+              )}
             </span>
             {isPromo && (
               <>
@@ -95,7 +90,9 @@ export default async function ProductPage({
           </div>
 
           {!outOfStock && product.variants.length === 0 && product.manageStock && (
-            <p className="mt-1 text-sm text-slate-500">{product.stock} em estoque</p>
+            <p className="mt-1 text-sm text-slate-500">
+              {formatQuantity(product.stock, UNIT_LABELS[product.unit])} em estoque
+            </p>
           )}
 
           <div className="mt-6">
@@ -106,10 +103,12 @@ export default async function ProductPage({
             ) : (
               <AddToCart
                 productId={product.id}
+                step={toNumber(product.unitStep) || 1}
+                unit={UNIT_LABELS[product.unit]}
                 variants={product.variants.map((v) => ({
                   id: v.id,
                   name: v.name,
-                  stock: v.stock,
+                  stock: toNumber(v.stock),
                 }))}
               />
             )}

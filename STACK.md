@@ -20,6 +20,9 @@ Plataforma de **estoque + delivery + marketplace + rede social comercial**.
 | Autenticação | **Auth.js / NextAuth v5** — credenciais, papéis (RBAC), proteção via `middleware` |
 | Segurança/validação | **bcryptjs** (hash de senha), **Zod** (validação) |
 | UI/Ícones | **lucide-react**, **clsx**, **tailwind-merge**, **date-fns** |
+| Mapas/Localização | **Leaflet + react-leaflet** (OpenStreetMap, sem API key) |
+| Financeiro | módulo de lucro/prejuízo + simuladores (`lib/finance.ts`) |
+| Produtos | venda por unidade **ou peso** (kg, g, L, un, caixa…) com preço de custo |
 
 ## 🗄️ Banco de dados — **MySQL / MariaDB**
 
@@ -38,7 +41,8 @@ Plataforma de **estoque + delivery + marketplace + rede social comercial**.
 
 - **Node.js 22** (runtime) · **npm** (gerenciador de pacotes) · **Git**
 - **Puppeteer + Chrome** — captura automática de screenshots (`scripts/screenshots.mjs`)
-- Scripts utilitários: `scripts/sync-prod-db.mjs` (sincroniza env na Vercel), `scripts/test-auth.mjs` (teste e2e de cadastro/login)
+- Scripts utilitários: `scripts/sync-prod-db.mjs` (env na Vercel), `scripts/push-prod.mjs` (schema+seed no Aiven), `scripts/test-auth.mjs` (teste e2e), `scripts/screenshots.mjs`
+- **Dump do banco**: `database/comerziahub.sql` (importável no XAMPP/phpMyAdmin)
 
 ## 🗂️ Arquitetura (pastas)
 
@@ -82,6 +86,7 @@ feed social, mensagens, cashback e fidelidade. Tema cibernético com alternânci
 
 ## 📜 Histórico de atualizações
 
+- **2026-05-31** — Evolução: **produtos por unidade/peso** (kg/g/L/un…) com preço de custo; **módulo financeiro** (lucro/prejuízo + simuladores de preço, pagamento e venda); **mapas** (Leaflet/OpenStreetMap) na loja; **imagens com fallback**; admin CMS (configurações + excluir/aprovar/suspender lojas e usuários); **paginação** no marketplace; correção de sobreposição de UI; "funcionário" → **vendedor** + hierarquia ADMIN›LOJA›VENDEDOR›ENTREGADOR›CLIENTE; **dump SQL** em `database/`.
 - **2026-05-31** — Tema cibernético + alternância claro/escuro (localStorage); página de **Mensagens** (comprador × vendedor); **produção no ar** (Vercel + Aiven MySQL) com cadastro/login validados; correção de compatibilidade MySQL 8 (PK em `VerificationToken`); seed enriquecido (cupons, emblemas, cashback, conversa); 26 screenshots reais.
 - **2026-05-30** — Criação do projeto: Next.js 15 + Prisma + Auth.js + Tailwind; schema com ~40 modelos; painéis e telas principais; seed inicial; repositório no GitHub + deploy inicial na Vercel; migração de PostgreSQL para **MySQL/MariaDB** (XAMPP).
 

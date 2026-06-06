@@ -30,6 +30,8 @@ export type NavLink = {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   exact?: boolean;
+  /** Só aparece para o dono da loja (e admin). */
+  ownerOnly?: boolean;
 };
 
 export type NavKey = "admin" | "store" | "account" | "courier";
@@ -57,12 +59,13 @@ export const NAVS: Record<NavKey, { title: string; items: NavLink[] }> = {
       { label: "Produtos", href: "/dashboard/products", icon: Package },
       { label: "Estoque", href: "/dashboard/inventory", icon: Boxes },
       { label: "Clientes", href: "/dashboard/customers", icon: Users },
-      { label: "Cashback", href: "/dashboard/cashback", icon: Gift },
-      { label: "Fidelidade", href: "/dashboard/loyalty", icon: Award },
+      { label: "Cashback", href: "/dashboard/cashback", icon: Gift, ownerOnly: true },
+      { label: "Fidelidade", href: "/dashboard/loyalty", icon: Award, ownerOnly: true },
       { label: "Cupons", href: "/dashboard/coupons", icon: Ticket },
-      { label: "Funcionários", href: "/dashboard/team", icon: UserCog },
+      { label: "Financeiro", href: "/dashboard/finance", icon: DollarSign, ownerOnly: true },
+      { label: "Vendedores", href: "/dashboard/team", icon: UserCog, ownerOnly: true },
       { label: "Rede social", href: "/dashboard/social", icon: Newspaper },
-      { label: "Configurações", href: "/dashboard/settings", icon: Settings },
+      { label: "Configurações", href: "/dashboard/settings", icon: Settings, ownerOnly: true },
     ],
   },
   account: {

@@ -5,6 +5,7 @@ import { getCartDetailed } from "@/services/cart";
 import { prisma } from "@/lib/prisma";
 import { safeQuery } from "@/lib/safe";
 import { toNumber } from "@/lib/utils";
+import { UNIT_LABELS } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Checkout" };
@@ -34,8 +35,9 @@ export default async function CheckoutPage() {
 
   const lines = cart.items.map((i) => ({
     name: i.product.name,
-    quantity: i.quantity,
-    total: toNumber(i.unitPrice) * i.quantity,
+    quantity: toNumber(i.quantity),
+    unit: UNIT_LABELS[i.product.unit],
+    total: toNumber(i.unitPrice) * toNumber(i.quantity),
     store: i.product.store.name,
   }));
   const subtotal = lines.reduce((s, l) => s + l.total, 0);

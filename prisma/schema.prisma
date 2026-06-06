@@ -4,7 +4,7 @@
 //
 //  Organização por domínios:
 //   1. Auth & usuários / permissões
-//   2. Lojas, funcionários e configurações
+//   2. Lojas, vendedores e configurações
 //   3. Catálogo, variações e estoque
 //   4. Carrinho, pedidos, pagamentos
 //   5. Delivery & entregadores
@@ -28,7 +28,7 @@ datasource db {
 enum UserRole {
   ADMIN // administrador geral da plataforma
   STORE_OWNER // dono de loja
-  STORE_EMPLOYEE // funcionário da loja
+  STORE_EMPLOYEE // vendedor (alias legado de SELLER)
   SELLER // vendedor
   CUSTOMER // cliente/comprador
   COURIER // entregador
@@ -498,6 +498,19 @@ model Category {
   @@index([storeId])
 }
 
+enum MeasureUnit {
+  UN // unidade
+  KG // quilograma
+  G // grama
+  L // litro
+  ML // mililitro
+  PACOTE
+  CAIXA
+  DUZIA
+  METRO
+  PORCAO
+}
+
 model Product {
   id            String        @id @default(cuid())
   storeId       String
@@ -513,7 +526,11 @@ model Product {
   promoStartsAt DateTime?
   promoEndsAt   DateTime?
   manageStock   Boolean       @default(true)
-  stock         Int           @default(0) // usado quando não há variações
+  stock         Decimal       @default(0) @db.Decimal(12, 3) // estoque (unidades ou peso)
+  unit          MeasureUnit   @default(UN)
+  minQuantity   Decimal       @default(1) @db.Decimal(12, 3) // qtd mínima de venda
+  unitStep      Decimal       @default(1) @db.Decimal(12, 3) // incremento (ex.: 0.1 p/ kg)
+  costPrice     Decimal?      @db.Decimal(12, 2) // preço de custo (financeiro)
   isFeatured    Boolean       @default(false)
   allowCashback Boolean       @default(true)
   ratingAvg     Float         @default(0)
@@ -562,7 +579,7 @@ model ProductVariant {
   attributes    Json?
   price         Decimal?      @db.Decimal(12, 2) // preço absoluto opcional
   priceModifier Decimal       @default(0) @db.Decimal(12, 2) // ou ajuste sobre o preço base
-  stock         Int           @default(0)
+  stock         Decimal       @default(0) @db.Decimal(12, 3)
   status        ProductStatus @default(ACTIVE)
   position      Int           @default(0)
 
@@ -580,7 +597,7 @@ model StockMovement {
   productId   String
   variantId   String?
   type        StockMovementType
-  quantity    Int
+  quantity    Decimal           @db.Decimal(12, 3)
   reason      String?
   reference   String? // ex.: orderId
   createdById String?
@@ -611,7 +628,7 @@ model CartItem {
   cartId    String
   productId String
   variantId String?
-  quantity  Int      @default(1)
+  quantity  Decimal  @default(1) @db.Decimal(12, 3)
   unitPrice Decimal  @db.Decimal(12, 2) // snapshot
   createdAt DateTime @default(now())
 
@@ -637,6 +654,10 @@ model Order {
   deliveryFee    Decimal @default(0) @db.Decimal(12, 2)
   total          Decimal @db.Decimal(12, 2)
   cashbackEarned Decimal @default(0) @db.Decimal(12, 2)
+  costTotal      Decimal @default(0) @db.Decimal(12, 2)
+  commissionFee  Decimal @default(0) @db.Decimal(12, 2)
+  paymentFee     Decimal @default(0) @db.Decimal(12, 2)
+  netProfit      Decimal @default(0) @db.Decimal(12, 2)
 
   couponId  String?
   addressId String?
@@ -665,6 +686,7 @@ model Order {
   @@index([customerId])
   @@index([storeId])
   @@index([status])
+  @@index([createdAt])
 }
 
 model OrderItem {
@@ -674,8 +696,9 @@ model OrderItem {
   variantId       String?
   name            String // snapshot do nome
   unitPrice       Decimal @db.Decimal(12, 2)
-  quantity        Int
+  quantity        Decimal @db.Decimal(12, 3)
   total           Decimal @db.Decimal(12, 2)
+  costPrice       Decimal @default(0) @db.Decimal(12, 2)
   cashbackPercent Decimal @default(0) @db.Decimal(5, 2)
 
   order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)

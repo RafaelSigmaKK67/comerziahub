@@ -9,7 +9,7 @@ import {
   DELIVERY_STATUS,
   PAYMENT_METHOD_LABELS,
 } from "@/lib/constants";
-import { formatCurrency, formatDate, toNumber } from "@/lib/utils";
+import { formatCurrency, formatDate, toNumber, formatQuantity } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -79,7 +79,7 @@ export default async function OrderTrackingPage({
           {order.items.map((i) => (
             <li key={i.id} className="flex justify-between py-2.5 text-sm">
               <span className="text-slate-700">
-                {i.quantity}× {i.name}
+                {formatQuantity(i.quantity)} × {i.name}
               </span>
               <span className="font-medium text-slate-900">{formatCurrency(i.total)}</span>
             </li>

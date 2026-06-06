@@ -59,7 +59,7 @@ export function SiteFooter() {
         ))}
       </div>
       <div className="border-t border-slate-100">
-        <div className="container-page flex flex-col items-center justify-between gap-2 py-6 text-xs text-slate-400 sm:flex-row">
+        <div className="container-page flex flex-col items-center justify-between gap-2 py-6 pb-24 text-xs text-slate-400 sm:flex-row md:pb-6">
           <p>
             © {new Date().getFullYear()} {APP.name}. Projeto demonstrativo —
             arquitetura de referência.

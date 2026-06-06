@@ -38,7 +38,8 @@ export async function addToCart(input: {
     : price + (variant ? toNumber(variant.priceModifier) : 0);
 
   const cart = await getOrCreateCart(user.id);
-  const qty = Math.max(1, input.quantity ?? 1);
+  const minQty = toNumber(product.minQuantity) || 1;
+  const qty = input.quantity && input.quantity > 0 ? input.quantity : minQty;
 
   const existing = await prisma.cartItem.findFirst({
     where: {
@@ -51,7 +52,7 @@ export async function addToCart(input: {
   if (existing) {
     await prisma.cartItem.update({
       where: { id: existing.id },
-      data: { quantity: existing.quantity + qty, unitPrice },
+      data: { quantity: toNumber(existing.quantity) + qty, unitPrice },
     });
   } else {
     await prisma.cartItem.create({

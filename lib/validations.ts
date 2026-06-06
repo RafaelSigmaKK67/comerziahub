@@ -43,7 +43,13 @@ export const productSchema = z.object({
   categoryId: z.string().optional(),
   basePrice: z.coerce.number().min(0, "Preço inválido"),
   promoPrice: z.coerce.number().min(0).optional(),
-  stock: z.coerce.number().int().min(0).default(0),
+  costPrice: z.coerce.number().min(0).optional(),
+  stock: z.coerce.number().min(0).default(0),
+  unit: z
+    .enum(["UN", "KG", "G", "L", "ML", "PACOTE", "CAIXA", "DUZIA", "METRO", "PORCAO"])
+    .default("UN"),
+  minQuantity: z.coerce.number().min(0).default(1),
+  unitStep: z.coerce.number().min(0).default(1),
   status: z.enum(["ACTIVE", "PAUSED", "OUT_OF_STOCK", "DRAFT"]).default("ACTIVE"),
 });
 

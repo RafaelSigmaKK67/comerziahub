@@ -7,7 +7,7 @@
  *   moderador@comerziahub.com    -> Moderador
  *   loja@comerziahub.com         -> Dono de loja
  *   loja2@comerziahub.com        -> Dono de loja
- *   funcionario@comerziahub.com  -> Funcionário
+ *   vendedor@comerziahub.com     -> Vendedor
  *   cliente@comerziahub.com      -> Cliente
  *   cliente2@comerziahub.com     -> Cliente
  *   entregador@comerziahub.com   -> Entregador
@@ -88,7 +88,7 @@ async function main() {
   await mkUser("moderador@comerziahub.com", "Moderador Social", "MODERATOR");
   const owner1 = await mkUser("loja@comerziahub.com", "Marina Lojista", "STORE_OWNER");
   const owner2 = await mkUser("loja2@comerziahub.com", "Rafael Comerciante", "STORE_OWNER");
-  const employee = await mkUser("funcionario@comerziahub.com", "Júlia Funcionária", "STORE_EMPLOYEE");
+  const seller = await mkUser("vendedor@comerziahub.com", "Júlia Vendedora", "SELLER");
   const customer = await mkUser("cliente@comerziahub.com", "Pedro Cliente", "CUSTOMER");
   const customer2 = await mkUser("cliente2@comerziahub.com", "Ana Compradora", "CUSTOMER");
   const courierUser = await mkUser("entregador@comerziahub.com", "Carlos Entregador", "COURIER");
@@ -133,9 +133,13 @@ async function main() {
     slug: string;
     price: number;
     promo?: number;
+    cost?: number;
     stock: number;
     category: string;
     featured?: boolean;
+    unit?: "UN" | "KG" | "G" | "L" | "ML" | "PACOTE" | "CAIXA" | "DUZIA" | "METRO" | "PORCAO";
+    step?: number;
+    minQty?: number;
     variants?: { name: string; stock: number; priceModifier?: number }[];
   };
 
@@ -154,12 +158,12 @@ async function main() {
       segment: "Mercado",
       description: "Frutas, verduras e legumes fresquinhos todos os dias.",
       ownerId: owner1.id,
-      members: [employee.id],
+      members: [seller.id],
       products: [
-        { name: "Banana Prata (kg)", slug: "banana-prata-kg", price: 6.9, stock: 120, category: "mercado", featured: true },
-        { name: "Maçã Gala (kg)", slug: "maca-gala-kg", price: 9.9, promo: 7.9, stock: 80, category: "mercado", featured: true },
-        { name: "Tomate Italiano (kg)", slug: "tomate-italiano-kg", price: 8.5, stock: 60, category: "mercado" },
-        { name: "Alface Crespa (un)", slug: "alface-crespa", price: 3.5, stock: 40, category: "mercado" },
+        { name: "Banana Prata", slug: "banana-prata-kg", price: 6.9, stock: 120, category: "mercado", featured: true, unit: "KG", step: 0.1, minQty: 0.1 },
+        { name: "Maçã Gala", slug: "maca-gala-kg", price: 9.9, promo: 7.9, stock: 80, category: "mercado", featured: true, unit: "KG", step: 0.1, minQty: 0.1 },
+        { name: "Tomate Italiano", slug: "tomate-italiano-kg", price: 8.5, stock: 60, category: "mercado", unit: "KG", step: 0.1, minQty: 0.1 },
+        { name: "Alface Crespa", slug: "alface-crespa", price: 3.5, stock: 40, category: "mercado" },
       ],
     },
     {
@@ -271,7 +275,15 @@ async function main() {
     for (const p of s.products) {
       const product = await prisma.product.upsert({
         where: { storeId_slug: { storeId: store.id, slug: p.slug } },
-        update: {},
+        update: {
+          name: p.name,
+          basePrice: p.price,
+          promoPrice: p.promo ?? null,
+          costPrice: p.cost ?? Math.round(p.price * 0.6 * 100) / 100,
+          unit: p.unit ?? "UN",
+          minQuantity: p.minQty ?? 1,
+          unitStep: p.step ?? 1,
+        },
         create: {
           storeId: store.id,
           categoryId: categories[p.category],
@@ -280,7 +292,11 @@ async function main() {
           description: `${p.name} — produto de demonstração da ${s.name}.`,
           basePrice: p.price,
           promoPrice: p.promo,
+          costPrice: p.cost ?? Math.round(p.price * 0.6 * 100) / 100,
           stock: p.stock,
+          unit: p.unit ?? "UN",
+          minQuantity: p.minQty ?? 1,
+          unitStep: p.step ?? 1,
           isFeatured: p.featured ?? false,
           ratingAvg: 4.5,
           ratingCount: 8,

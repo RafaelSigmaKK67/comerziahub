@@ -72,7 +72,11 @@ export async function createProduct(
     categoryId: formData.get("categoryId") || undefined,
     basePrice: formData.get("basePrice"),
     promoPrice: formData.get("promoPrice") || undefined,
+    costPrice: formData.get("costPrice") || undefined,
     stock: formData.get("stock") || 0,
+    unit: formData.get("unit") || "UN",
+    minQuantity: formData.get("minQuantity") || 1,
+    unitStep: formData.get("unitStep") || 1,
     status: formData.get("status") || "ACTIVE",
   });
   if (!parsed.success) {
@@ -97,7 +101,11 @@ export async function createProduct(
       categoryId: parsed.data.categoryId || null,
       basePrice: parsed.data.basePrice,
       promoPrice: parsed.data.promoPrice || null,
+      costPrice: parsed.data.costPrice ?? null,
       stock: parsed.data.stock,
+      unit: parsed.data.unit,
+      minQuantity: parsed.data.minQuantity,
+      unitStep: parsed.data.unitStep,
       status: parsed.data.status,
       ...(imageUrl ? { images: { create: { url: imageUrl, isPrimary: true } } } : {}),
     },

@@ -6,6 +6,8 @@ import { RatingStars } from "@/components/commerce/rating";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { SmartImage } from "@/components/ui/smart-image";
+import { MapEmbed } from "@/components/maps/map-embed";
 import { getStoreBySlug } from "@/services/catalog";
 import { isFollowingStore } from "@/services/social";
 import { getCurrentUser } from "@/lib/session";
@@ -32,8 +34,7 @@ export default async function StorePage({
       {/* Banner */}
       <div className="relative h-40 bg-gradient-to-r from-brand-500 to-brand-700 sm:h-56">
         {store.bannerUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={store.bannerUrl} alt="" className="h-full w-full object-cover" />
+          <SmartImage src={store.bannerUrl} alt="" fallbackText={store.name} className="h-full w-full object-cover" />
         )}
       </div>
 
@@ -42,12 +43,7 @@ export default async function StorePage({
         <div className="-mt-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex items-end gap-4">
             <span className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-3xl border-4 border-white bg-brand-100 text-brand-600 shadow-card">
-              {store.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={store.logoUrl} alt={store.name} className="h-full w-full object-cover" />
-              ) : (
-                <StoreIcon className="h-10 w-10" />
-              )}
+              <SmartImage src={store.logoUrl} alt={store.name} icon={StoreIcon} className="h-full w-full object-cover" />
             </span>
             <div className="pb-1">
               <div className="flex items-center gap-2">
@@ -138,6 +134,20 @@ export default async function StorePage({
             </div>
           )}
         </section>
+
+        {store.lat != null && store.lng != null && (
+          <section className="mb-12">
+            <h2 className="mb-4 text-xl font-bold text-slate-900">Mapa e área de entrega</h2>
+            <div className="h-72 overflow-hidden rounded-2xl border border-slate-200">
+              <MapEmbed
+                lat={store.lat}
+                lng={store.lng}
+                label={store.name}
+                radiusKm={store.settings?.maxDeliveryRadiusKm ?? undefined}
+              />
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

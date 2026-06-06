@@ -41,15 +41,18 @@ ComerziaHub reúne, em um só sistema, um **controle de estoque**, um **aplicati
 
 Cada papel tem permissões e painel próprios (protegidos por middleware):
 
+Hierarquia: **ADMIN GERAL › DONO DE LOJA › VENDEDOR › ENTREGADOR › CLIENTE.**
+
 | Papel | Acesso | Painel |
 |------|--------|--------|
-| **Administrador** (`ADMIN`) | Tudo | `/admin` |
+| **Administrador** (`ADMIN`) | Controla toda a plataforma | `/admin` |
 | **Moderador** (`MODERATOR`) | Rede social / denúncias | `/admin/social` |
-| **Dono de loja** (`STORE_OWNER`) | Painel da loja | `/dashboard` |
-| **Funcionário** (`STORE_EMPLOYEE`) | Painel da loja | `/dashboard` |
-| **Vendedor** (`SELLER`) | Painel da loja | `/dashboard` |
-| **Cliente** (`CUSTOMER`) | Área do cliente | `/account` |
-| **Entregador** (`COURIER`) | Painel do entregador | `/courier` |
+| **Dono de loja** (`STORE_OWNER`) | Sua loja, produtos, vendedores, pedidos, financeiro, cashback, fidelidade | `/dashboard` |
+| **Vendedor** (`SELLER`) | Vendas, pedidos, produtos e estoque da loja (sem config/financeiro) | `/dashboard` |
+| **Cliente** (`CUSTOMER`) | Compras, pedidos, cashback, fidelidade, mensagens, social | `/account` |
+| **Entregador** (`COURIER`) | Entregas, status, localização, ganhos | `/courier` |
+
+> *(O papel legado `STORE_EMPLOYEE` é tratado como **Vendedor**.)*
 
 ---
 
@@ -66,9 +69,16 @@ Cada papel tem permissões e painel próprios (protegidos por middleware):
 - **Painel do entregador**: status online/offline, entregas disponíveis, aceite e avanço de entrega (coletei/entreguei), ganhos.
 - **Rede social**: feed, publicações (texto/produto/promoção), curtidas, seguir lojas.
 - **Cashback & fidelidade**: regras por loja, cashback gerado automaticamente no pedido, carteira por loja, níveis (Bronze→VIP) calculados por compras/gasto.
+- **Produtos por unidade ou peso**: unidade de medida configurável (un, kg, g, L, ml, pacote, caixa, dúzia…), quantidade mínima e incremento; carrinho/checkout/estoque/pedidos exibem corretamente (ex.: 0,5 kg).
+- **Financeiro do lojista**: painel de lucro/prejuízo (faturamento × custos × comissão × taxas × cashback), margem, ticket, lucro por produto e por pedido — usando preço de **custo**.
+- **Simuladores**: preço de venda com margem (mostra lucro/prejuízo), comparação entre formas de pagamento (quanto você recebe e prazos) e simulador de venda (frete + desconto + cupom + cashback).
+- **Mapas/Localização**: mapa da loja e área de entrega com **Leaflet + OpenStreetMap** (sem API key); distância e tempo estimado por Haversine.
+- **Admin (CMS)**: configurações da plataforma (PlatformSetting), aprovar/suspender/excluir lojas e usuários, taxas por forma de pagamento.
+- **Mensagens**: chat comprador × vendedor funcional.
+- **Imagens com fallback**: placeholder elegante para URLs vazias/quebradas em produtos, lojas, banners e publicações.
 
 ### Estrutura pronta (modelo de dados + UI base, completar no roadmap)
-- Upload de imagens (hoje por URL), mensagens privadas, comentários aninhados, amizades/conexões, denúncias com fluxo completo, cupons (criação), editor de níveis de fidelidade, integração com gateway de pagamento e mapas.
+- Upload real de imagens (hoje por URL), comentários aninhados, amizades/conexões, denúncias com fluxo completo, criação de cupons via UI, editor visual de níveis de fidelidade e integração com gateway de pagamento.
 
 ---
 
@@ -134,6 +144,19 @@ Acesse **http://localhost:3000**.
 3. No `.env`: `DATABASE_URL="mysql://root@localhost:3306/estoque_delivery"` *(root sem senha é o padrão do XAMPP)*.
 4. `npm run db:push` cria as tabelas e `npm run db:seed` popula os dados — visíveis depois no phpMyAdmin.
 
+### Opção rápida: importar o dump pronto
+
+Já existe um **dump completo** com dados de exemplo em **`database/comerziahub.sql`**
+(lojas, produtos com unidades/kg/custos, pedidos, cashback, fidelidade, emblemas,
+cupons, mensagens, publicações e avaliações). Para usar em vez do seed:
+
+- **phpMyAdmin:** aba *Importar* → selecione `database/comerziahub.sql` → *Executar*.
+- **Linha de comando:**
+  ```bash
+  mysql -u root < database/comerziahub.sql
+  ```
+O dump já cria o banco `estoque_delivery`. Depois é só `npm run dev`.
+
 ---
 
 ## 🗄️ Banco de dados, migrations e seed
@@ -148,7 +171,7 @@ Acesse **http://localhost:3000**.
 | `npm run db:studio` | Abre o Prisma Studio |
 | `npm run db:reset` | **Apaga** e recria o banco + seed |
 
-O **schema** (`prisma/schema.prisma`) cobre ~40 modelos: usuários, perfis, permissões, lojas, funcionários, produtos, categorias, variações, estoque/movimentações, carrinho, pedidos, itens, pagamentos, entregas, entregadores, endereços, avaliações, cashback (regras/transações/carteira), fidelidade (níveis/status/emblemas), cupons, publicações, comentários, curtidas, seguidores, amizades, mensagens, notificações, denúncias, planos, assinaturas e configurações.
+O **schema** (`prisma/schema.prisma`) cobre ~40 modelos: usuários, perfis, permissões, lojas, vendedores, produtos, categorias, variações, estoque/movimentações, carrinho, pedidos, itens, pagamentos, entregas, entregadores, endereços, avaliações, cashback (regras/transações/carteira), fidelidade (níveis/status/emblemas), cupons, publicações, comentários, curtidas, seguidores, amizades, mensagens, notificações, denúncias, planos, assinaturas e configurações.
 
 ---
 
@@ -197,7 +220,7 @@ Disponíveis após rodar `npm run db:seed`. **Senha de todas:** `senha123`
 | Moderador | `moderador@comerziahub.com` |
 | Dono de loja | `loja@comerziahub.com` |
 | Dono de loja | `loja2@comerziahub.com` |
-| Funcionário | `funcionario@comerziahub.com` |
+| Vendedor | `vendedor@comerziahub.com` |
 | Cliente | `cliente@comerziahub.com` |
 | Cliente | `cliente2@comerziahub.com` |
 | Entregador | `entregador@comerziahub.com` |

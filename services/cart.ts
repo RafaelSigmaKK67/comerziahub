@@ -1,16 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { safeQuery } from "@/lib/safe";
 
-/** Soma das quantidades no carrinho do usuário (0 se vazio / sem banco). */
+/** Número de itens (linhas) no carrinho do usuário (0 se vazio / sem banco). */
 export async function getCartItemCount(userId: string): Promise<number> {
-  return safeQuery(async () => {
-    const cart = await prisma.cart.findUnique({
-      where: { userId },
-      select: { items: { select: { quantity: true } } },
-    });
-    if (!cart) return 0;
-    return cart.items.reduce((sum, i) => sum + i.quantity, 0);
-  }, 0);
+  return safeQuery(
+    () => prisma.cartItem.count({ where: { cart: { userId } } }),
+    0,
+  );
 }
 
 /** Carrinho completo com produtos/variações para a página /cart. */

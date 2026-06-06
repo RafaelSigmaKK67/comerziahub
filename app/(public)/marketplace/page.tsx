@@ -3,6 +3,7 @@ import { SlidersHorizontal } from "lucide-react";
 import { StoreCard } from "@/components/commerce/store-card";
 import { ProductCard } from "@/components/commerce/product-card";
 import { Button } from "@/components/ui/button";
+import { Pagination } from "@/components/ui/pagination";
 import { searchProducts, listStores, listCategories } from "@/services/catalog";
 
 export const dynamic = "force-dynamic";
@@ -26,12 +27,25 @@ export default async function MarketplacePage({
   const minPrice = sp.minPrice ? Number(sp.minPrice) : undefined;
   const maxPrice = sp.maxPrice ? Number(sp.maxPrice) : undefined;
   const sort = (sp.sort as "recent" | "price_asc" | "price_desc" | "rating") || "recent";
+  const page = Math.max(1, Number(sp.page) || 1);
 
-  const [products, stores, categories] = await Promise.all([
-    searchProducts({ q, categoryId, minPrice, maxPrice, sort }),
+  const [productResult, stores, categories] = await Promise.all([
+    searchProducts({ q, categoryId, minPrice, maxPrice, sort, page }),
     q ? listStores({ q }) : Promise.resolve([]),
     listCategories(),
   ]);
+  const products = productResult.items;
+
+  const makeHref = (p: number) => {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (categoryId) params.set("categoryId", categoryId);
+    if (sp.minPrice) params.set("minPrice", sp.minPrice);
+    if (sp.maxPrice) params.set("maxPrice", sp.maxPrice);
+    params.set("sort", sort);
+    params.set("page", String(p));
+    return `/marketplace?${params.toString()}`;
+  };
 
   return (
     <div className="container-page py-8">
@@ -39,7 +53,7 @@ export default async function MarketplacePage({
         {q ? `Resultados para “${q}”` : "Marketplace"}
       </h1>
       <p className="mt-1 text-sm text-slate-500">
-        {products.length} produto(s){stores.length ? ` · ${stores.length} loja(s)` : ""}
+        {productResult.total} produto(s){stores.length ? ` · ${stores.length} loja(s)` : ""}
       </p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[260px_1fr]">
@@ -106,11 +120,14 @@ export default async function MarketplacePage({
               <h2 className="mb-3 text-lg font-semibold text-slate-900">Produtos</h2>
             )}
             {products.length > 0 ? (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
-                {products.map((p) => (
-                  <ProductCard key={p.id} product={p} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+                  {products.map((p) => (
+                    <ProductCard key={p.id} product={p} />
+                  ))}
+                </div>
+                <Pagination page={page} pages={productResult.pages} makeHref={makeHref} />
+              </>
             ) : (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
                 <p className="font-medium text-slate-700">Nada encontrado</p>

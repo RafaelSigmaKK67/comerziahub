@@ -55,3 +55,8 @@ export function isStoreRole(role?: UserRole | null) {
     role === "STORE_OWNER" || role === "STORE_EMPLOYEE" || role === "SELLER"
   );
 }
+
+/** Dono da loja (ou admin) — acesso a configurações, financeiro, vendedores. */
+export function isStoreOwner(role?: UserRole | null) {
+  return role === "STORE_OWNER" || role === "ADMIN";
+}

@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/session";
 import { getCartDetailed } from "@/services/cart";
 import { toNumber } from "@/lib/utils";
+import { UNIT_LABELS } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Carrinho" };
@@ -39,7 +40,9 @@ export default async function CartPage() {
     storeName: i.product.store.name,
     variant: i.variant?.name ?? null,
     unitPrice: toNumber(i.unitPrice),
-    quantity: i.quantity,
+    quantity: toNumber(i.quantity),
+    unit: UNIT_LABELS[i.product.unit],
+    step: toNumber(i.product.unitStep) || 1,
   }));
 
   return (

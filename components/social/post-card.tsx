@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MessageCircle, Share2, Store as StoreIcon } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { SmartImage } from "@/components/ui/smart-image";
 import { LikeButton } from "./like-button";
 import { formatRelative, formatCurrency } from "@/lib/utils";
 import { ROLE_LABELS } from "@/lib/constants";
@@ -32,12 +33,7 @@ export function PostCard({ post, liked }: { post: FeedPost; liked: boolean }) {
         {post.store ? (
           <Link href={`/store/${post.store.slug}`} className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-brand-600">
-              {post.store.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={post.store.logoUrl} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <StoreIcon className="h-5 w-5" />
-              )}
+              <SmartImage src={post.store.logoUrl} alt={post.store.name} icon={StoreIcon} className="h-full w-full object-cover" />
             </span>
             <div>
               <p className="text-sm font-semibold text-slate-900">{post.store.name}</p>
@@ -72,8 +68,7 @@ export function PostCard({ post, liked }: { post: FeedPost; liked: boolean }) {
           className={`mt-3 grid gap-2 overflow-hidden rounded-xl ${post.images.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}
         >
           {post.images.slice(0, 4).map((im) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img key={im.id} src={im.url} alt="" className="max-h-80 w-full object-cover" />
+            <SmartImage key={im.id} src={im.url} alt="" fallbackText={post.content ?? "•"} className="max-h-80 w-full object-cover" />
           ))}
         </div>
       )}
@@ -85,10 +80,7 @@ export function PostCard({ post, liked }: { post: FeedPost; liked: boolean }) {
           className="mt-3 flex items-center gap-3 rounded-xl border border-slate-200 p-3 transition hover:border-brand-300"
         >
           <span className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-slate-100">
-            {post.product.images[0]?.url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={post.product.images[0].url} alt="" className="h-full w-full object-cover" />
-            ) : null}
+            <SmartImage src={post.product.images[0]?.url} alt={post.product.name} fallbackText={post.product.name} className="h-full w-full object-cover" />
           </span>
           <div>
             <p className="text-sm font-medium text-slate-800">{post.product.name}</p>

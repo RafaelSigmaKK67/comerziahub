@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { safeQuery } from "@/lib/safe";
 
-/** Loja gerenciada pelo usuário: própria (owner) ou via vínculo (funcionário). */
+/** Loja gerenciada pelo usuário: própria (owner) ou via vínculo (vendedor). */
 export async function getManagedStore(userId: string) {
   return safeQuery(async () => {
     const owned = await prisma.store.findFirst({

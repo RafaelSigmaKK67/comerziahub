@@ -8,7 +8,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getCurrentUser } from "@/lib/session";
 import { getManagedStore, listStoreProducts } from "@/services/store";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatQuantity } from "@/lib/utils";
+import { UNIT_LABELS } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -78,7 +79,9 @@ export default async function StoreProductsPage() {
                     </td>
                     <td className="px-4 py-3 text-slate-700">{formatCurrency(p.basePrice)}</td>
                     <td className="px-4 py-3 text-slate-600">
-                      {p._count.variants > 0 ? `${p._count.variants} variações` : p.stock}
+                      {p._count.variants > 0
+                        ? `${p._count.variants} variações`
+                        : formatQuantity(p.stock, UNIT_LABELS[p.unit])}
                     </td>
                     <td className="px-4 py-3">
                       <Badge className={STATUS[p.status]?.className}>{STATUS[p.status]?.label}</Badge>

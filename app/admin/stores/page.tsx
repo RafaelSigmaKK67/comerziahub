@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { safeQuery } from "@/lib/safe";
 import { formatDate } from "@/lib/utils";
 import { STORE_STATUS_LABELS } from "@/lib/constants";
-import { setStoreStatus } from "@/actions/admin";
+import { setStoreStatus, deleteStore } from "@/actions/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +77,9 @@ export default async function AdminStoresPage() {
                             <Button size="sm" variant="outline" type="submit">Suspender</Button>
                           </form>
                         )}
+                        <form action={deleteStore.bind(null, s.id)}>
+                          <Button size="sm" variant="danger" type="submit">Excluir</Button>
+                        </form>
                       </div>
                     </td>
                   </tr>

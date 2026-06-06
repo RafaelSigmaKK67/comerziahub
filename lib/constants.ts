@@ -4,7 +4,37 @@ import type {
   DeliveryStatus,
   StoreStatus,
   PaymentMethod,
+  MeasureUnit,
 } from "@prisma/client";
+
+export const UNIT_LABELS: Record<MeasureUnit, string> = {
+  UN: "un",
+  KG: "kg",
+  G: "g",
+  L: "L",
+  ML: "ml",
+  PACOTE: "pct",
+  CAIXA: "cx",
+  DUZIA: "dz",
+  METRO: "m",
+  PORCAO: "porção",
+};
+
+export const UNIT_OPTIONS: { value: MeasureUnit; label: string }[] = [
+  { value: "UN", label: "Unidade" },
+  { value: "KG", label: "Quilograma (kg)" },
+  { value: "G", label: "Grama (g)" },
+  { value: "L", label: "Litro (L)" },
+  { value: "ML", label: "Mililitro (ml)" },
+  { value: "PACOTE", label: "Pacote" },
+  { value: "CAIXA", label: "Caixa" },
+  { value: "DUZIA", label: "Dúzia" },
+  { value: "METRO", label: "Metro" },
+  { value: "PORCAO", label: "Porção" },
+];
+
+/** Unidades vendidas por peso/volume (fracionáveis). */
+export const FRACTIONAL_UNITS: MeasureUnit[] = ["KG", "G", "L", "ML", "METRO"];
 
 export const APP = {
   name: "ComerziaHub",
@@ -17,7 +47,7 @@ export const APP = {
 export const ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: "Administrador",
   STORE_OWNER: "Dono de loja",
-  STORE_EMPLOYEE: "Funcionário",
+  STORE_EMPLOYEE: "Vendedor",
   SELLER: "Vendedor",
   CUSTOMER: "Cliente",
   COURIER: "Entregador",

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { SmartImage } from "@/components/ui/smart-image";
 import { RatingStars } from "./rating";
 import { cn, formatCurrency, effectivePrice } from "@/lib/utils";
 
@@ -30,18 +31,12 @@ export function ProductCard({ product }: { product: ProductCardData }) {
       className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card transition hover:shadow-soft"
     >
       <div className="relative aspect-square overflow-hidden bg-slate-100">
-        {img ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={img}
-            alt={product.name}
-            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-brand-50 to-slate-100 text-3xl font-bold text-brand-300">
-            {product.name[0]}
-          </div>
-        )}
+        <SmartImage
+          src={img}
+          alt={product.name}
+          fallbackText={product.name}
+          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+        />
         {isPromo && (
           <Badge className="absolute left-2 top-2 bg-accent-500 text-white">
             Promoção

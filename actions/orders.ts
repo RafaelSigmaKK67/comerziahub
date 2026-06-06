@@ -14,6 +14,7 @@ import {
   cashbackExpiryDate,
 } from "@/lib/cashback";
 import { resolveTier } from "@/lib/loyalty";
+import { calcOrderFinance } from "@/lib/finance";
 
 /**
  * Finaliza a compra: divide o carrinho por loja, cria um pedido para cada uma
@@ -64,7 +65,11 @@ export async function placeOrder(formData: FormData) {
     const store = items[0].product.store;
     const settings = store.settings;
     const subtotal = items.reduce(
-      (s, i) => s + toNumber(i.unitPrice) * i.quantity,
+      (s, i) => s + toNumber(i.unitPrice) * toNumber(i.quantity),
+      0,
+    );
+    const costTotal = items.reduce(
+      (s, i) => s + toNumber(i.product.costPrice) * toNumber(i.quantity),
       0,
     );
 
@@ -107,6 +112,13 @@ export async function placeOrder(formData: FormData) {
     }
 
     const total = subtotal + deliveryFee;
+    const fin = calcOrderFinance({
+      subtotal,
+      costTotal,
+      deliveryFee,
+      cashbackEarned,
+      method: paymentMethod,
+    });
     const code = generateOrderCode();
 
     await prisma.$transaction(async (tx) => {
@@ -121,6 +133,10 @@ export async function placeOrder(formData: FormData) {
           deliveryFee,
           total,
           cashbackEarned,
+          costTotal: fin.costTotal,
+          commissionFee: fin.commissionFee,
+          paymentFee: fin.paymentFee,
+          netProfit: fin.netProfit,
           addressId: fulfillmentType === "DELIVERY" ? addressId : null,
           notes,
           items: {
@@ -129,8 +145,9 @@ export async function placeOrder(formData: FormData) {
               variantId: i.variantId,
               name: i.product.name,
               unitPrice: toNumber(i.unitPrice),
-              quantity: i.quantity,
-              total: toNumber(i.unitPrice) * i.quantity,
+              quantity: toNumber(i.quantity),
+              total: toNumber(i.unitPrice) * toNumber(i.quantity),
+              costPrice: toNumber(i.product.costPrice),
               cashbackPercent,
             })),
           },
@@ -191,17 +208,18 @@ export async function placeOrder(formData: FormData) {
 
       // Baixa de estoque + movimentação
       for (const i of items) {
+        const qn = toNumber(i.quantity);
         if (i.variantId) {
           await tx.productVariant.update({
             where: { id: i.variantId },
-            data: { stock: { decrement: i.quantity } },
+            data: { stock: { decrement: qn } },
           });
         } else if (i.product.manageStock) {
           await tx.product.update({
             where: { id: i.productId },
             data: {
-              stock: { decrement: i.quantity },
-              salesCount: { increment: i.quantity },
+              stock: { decrement: qn },
+              salesCount: { increment: 1 },
             },
           });
         }
@@ -211,7 +229,7 @@ export async function placeOrder(formData: FormData) {
             productId: i.productId,
             variantId: i.variantId,
             type: "SALE",
-            quantity: -i.quantity,
+            quantity: -qn,
             reason: `Venda pedido ${code}`,
             reference: order.id,
             createdById: user.id,

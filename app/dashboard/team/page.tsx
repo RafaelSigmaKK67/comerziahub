@@ -8,11 +8,13 @@ import { getCurrentUser } from "@/lib/session";
 import { getManagedStore } from "@/services/store";
 import { prisma } from "@/lib/prisma";
 import { safeQuery } from "@/lib/safe";
+import { isStoreOwner } from "@/lib/rbac";
 
 export const dynamic = "force-dynamic";
 
 export default async function TeamPage() {
   const user = await getCurrentUser();
+  if (!isStoreOwner(user!.role)) redirect("/dashboard");
   const store = await getManagedStore(user!.id);
   if (!store) redirect("/dashboard");
 
@@ -27,7 +29,7 @@ export default async function TeamPage() {
 
   return (
     <>
-      <PageHeader title="Funcionários" description="Equipe com acesso ao painel da loja." />
+      <PageHeader title="Vendedores" description="Equipe de vendas com acesso ao painel da loja." />
 
       {members.length > 0 && (
         <Card className="mb-6 divide-y divide-slate-100">
@@ -47,8 +49,8 @@ export default async function TeamPage() {
       )}
 
       <ComingSoon
-        title="Convidar e gerenciar funcionários"
-        description="Convide membros por e-mail e defina papéis (gerente, atendente, vendedor)."
+        title="Convidar e gerenciar vendedores"
+        description="Convide vendedores por e-mail e defina papéis (gerente, vendedor)."
         ready={["Modelo StoreMember com papéis no schema"]}
       />
     </>

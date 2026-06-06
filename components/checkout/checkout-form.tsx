@@ -7,14 +7,14 @@ import { Truck, Store, MapPin } from "lucide-react";
 import { placeOrder } from "@/actions/orders";
 import { Button } from "@/components/ui/button";
 import { PAYMENT_METHOD_LABELS } from "@/lib/constants";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatQuantity } from "@/lib/utils";
 
 type AddressOption = {
   id: string;
   label: string;
 };
 
-type Line = { name: string; quantity: number; total: number; store: string };
+type Line = { name: string; quantity: number; unit?: string; total: number; store: string };
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -130,7 +130,7 @@ export function CheckoutForm({
           {lines.map((l, idx) => (
             <li key={idx} className="flex justify-between text-slate-600">
               <span className="truncate">
-                {l.quantity}× {l.name}
+                {formatQuantity(l.quantity, l.unit)} × {l.name}
               </span>
               <span>{formatCurrency(l.total)}</span>
             </li>

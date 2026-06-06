@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Store as StoreIcon, MapPin } from "lucide-react";
 import { RatingStars } from "./rating";
 import { Badge } from "@/components/ui/badge";
+import { SmartImage } from "@/components/ui/smart-image";
 
 export type StoreCardData = {
   id: string;
@@ -26,19 +27,13 @@ export function StoreCard({ store }: { store: StoreCardData }) {
     >
       <div className="relative h-24 bg-gradient-to-r from-brand-500 to-brand-700">
         {store.bannerUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={store.bannerUrl} alt="" className="h-full w-full object-cover" />
+          <SmartImage src={store.bannerUrl} alt="" fallbackText={store.name} className="h-full w-full object-cover" />
         )}
       </div>
       <div className="px-4 pb-4">
         <div className="-mt-7 mb-2 flex items-end justify-between">
           <span className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border-4 border-white bg-brand-100 text-brand-600 shadow-sm">
-            {store.logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={store.logoUrl} alt={store.name} className="h-full w-full object-cover" />
-            ) : (
-              <StoreIcon className="h-6 w-6" />
-            )}
+            <SmartImage src={store.logoUrl} alt={store.name} icon={StoreIcon} className="h-full w-full object-cover" />
           </span>
           <Badge
             className={

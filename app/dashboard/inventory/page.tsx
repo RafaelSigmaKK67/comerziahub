@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getCurrentUser } from "@/lib/session";
 import { getManagedStore, listStoreProducts } from "@/services/store";
+import { toNumber, formatQuantity } from "@/lib/utils";
+import { UNIT_LABELS } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -38,12 +40,12 @@ export default async function InventoryPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {products.map((p) => {
-                  const low = p._count.variants === 0 && p.stock <= 5;
+                  const low = p._count.variants === 0 && toNumber(p.stock) <= 5;
                   return (
                     <tr key={p.id}>
                       <td className="px-4 py-3 font-medium text-slate-800">{p.name}</td>
                       <td className="px-4 py-3 text-slate-600">{p._count.variants}</td>
-                      <td className="px-4 py-3 text-slate-700">{p._count.variants > 0 ? "—" : p.stock}</td>
+                      <td className="px-4 py-3 text-slate-700">{p._count.variants > 0 ? "—" : formatQuantity(p.stock, UNIT_LABELS[p.unit])}</td>
                       <td className="px-4 py-3">
                         {p._count.variants > 0 ? (
                           <Badge className="bg-slate-100 text-slate-600">Por variação</Badge>

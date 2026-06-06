@@ -8,11 +8,13 @@ import { getManagedStore } from "@/services/store";
 import { prisma } from "@/lib/prisma";
 import { safeQuery } from "@/lib/safe";
 import { formatCurrency } from "@/lib/utils";
+import { isStoreOwner } from "@/lib/rbac";
 
 export const dynamic = "force-dynamic";
 
 export default async function LoyaltyPage() {
   const user = await getCurrentUser();
+  if (!isStoreOwner(user!.role)) redirect("/dashboard");
   const store = await getManagedStore(user!.id);
   if (!store) redirect("/dashboard");
 

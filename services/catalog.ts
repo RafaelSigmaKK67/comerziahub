@@ -117,8 +117,10 @@ export async function searchProducts(opts: {
   minPrice?: number;
   maxPrice?: number;
   sort?: "recent" | "price_asc" | "price_desc" | "rating";
+  page?: number;
+  perPage?: number;
 }) {
-  const { q, categoryId, minPrice, maxPrice, sort = "recent" } = opts;
+  const { q, categoryId, minPrice, maxPrice, sort = "recent", page = 1, perPage = 24 } = opts;
   const orderBy: Prisma.ProductOrderByWithRelationInput =
     sort === "price_asc"
       ? { basePrice: "asc" }
@@ -128,27 +130,35 @@ export async function searchProducts(opts: {
           ? { ratingAvg: "desc" }
           : { createdAt: "desc" };
 
+  const where: Prisma.ProductWhereInput = {
+    status: "ACTIVE",
+    ...(categoryId ? { categoryId } : {}),
+    ...(q ? { name: { contains: q } } : {}),
+    ...(minPrice || maxPrice
+      ? {
+          basePrice: {
+            ...(minPrice ? { gte: minPrice } : {}),
+            ...(maxPrice ? { lte: maxPrice } : {}),
+          },
+        }
+      : {}),
+  };
+
   return safeQuery(
-    () =>
-      prisma.product.findMany({
-        where: {
-          status: "ACTIVE",
-          ...(categoryId ? { categoryId } : {}),
-          ...(q ? { name: { contains: q } } : {}),
-          ...(minPrice || maxPrice
-            ? {
-                basePrice: {
-                  ...(minPrice ? { gte: minPrice } : {}),
-                  ...(maxPrice ? { lte: maxPrice } : {}),
-                },
-              }
-            : {}),
-        },
-        orderBy,
-        take: 60,
-        select: productCard,
-      }),
-    [],
+    async () => {
+      const [items, total] = await Promise.all([
+        prisma.product.findMany({
+          where,
+          orderBy,
+          take: perPage,
+          skip: (page - 1) * perPage,
+          select: productCard,
+        }),
+        prisma.product.count({ where }),
+      ]);
+      return { items, total, pages: Math.max(1, Math.ceil(total / perPage)) };
+    },
+    { items: [], total: 0, pages: 1 },
   );
 }
 

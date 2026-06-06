@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { safeQuery } from "@/lib/safe";
 import { formatDate } from "@/lib/utils";
 import { ROLE_LABELS } from "@/lib/constants";
-import { setUserStatus } from "@/actions/admin";
+import { setUserStatus, deleteUser } from "@/actions/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -69,16 +69,22 @@ export default async function AdminUsersPage() {
                       <Badge className={STATUS_STYLE[u.status]}>{u.status}</Badge>
                     </td>
                     <td className="px-4 py-3">
-                      {u.role !== "ADMIN" &&
-                        (u.status === "ACTIVE" ? (
-                          <form action={setUserStatus.bind(null, u.id, "SUSPENDED")}>
-                            <Button size="sm" variant="outline" type="submit">Suspender</Button>
+                      {u.role !== "ADMIN" && (
+                        <div className="flex flex-wrap gap-2">
+                          {u.status === "ACTIVE" ? (
+                            <form action={setUserStatus.bind(null, u.id, "SUSPENDED")}>
+                              <Button size="sm" variant="outline" type="submit">Suspender</Button>
+                            </form>
+                          ) : (
+                            <form action={setUserStatus.bind(null, u.id, "ACTIVE")}>
+                              <Button size="sm" type="submit">Reativar</Button>
+                            </form>
+                          )}
+                          <form action={deleteUser.bind(null, u.id)}>
+                            <Button size="sm" variant="danger" type="submit">Excluir</Button>
                           </form>
-                        ) : (
-                          <form action={setUserStatus.bind(null, u.id, "ACTIVE")}>
-                            <Button size="sm" type="submit">Reativar</Button>
-                          </form>
-                        ))}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}

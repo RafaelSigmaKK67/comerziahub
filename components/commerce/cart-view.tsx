@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { updateCartItem, removeCartItem, clearCart } from "@/actions/cart";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatQuantity } from "@/lib/utils";
 
 export type CartLine = {
   id: string;
@@ -17,7 +17,11 @@ export type CartLine = {
   variant: string | null;
   unitPrice: number;
   quantity: number;
+  unit?: string | null;
+  step?: number;
 };
+
+const r3 = (n: number) => Math.round(n * 1000) / 1000;
 
 export function CartView({ items }: { items: CartLine[] }) {
   const [pending, start] = useTransition();
@@ -76,11 +80,11 @@ export function CartView({ items }: { items: CartLine[] }) {
               </div>
               <div className="mt-auto flex items-center justify-between">
                 <div className="flex items-center rounded-lg border border-slate-300">
-                  <button onClick={() => update(i.id, i.quantity - 1)} disabled={pending} className="px-2.5 py-1.5 text-slate-600">
+                  <button onClick={() => update(i.id, r3(i.quantity - (i.step || 1)))} disabled={pending} className="px-2.5 py-1.5 text-slate-600">
                     <Minus className="h-3.5 w-3.5" />
                   </button>
-                  <span className="w-8 text-center text-sm">{i.quantity}</span>
-                  <button onClick={() => update(i.id, i.quantity + 1)} disabled={pending} className="px-2.5 py-1.5 text-slate-600">
+                  <span className="min-w-14 px-1 text-center text-sm">{formatQuantity(i.quantity, i.unit)}</span>
+                  <button onClick={() => update(i.id, r3(i.quantity + (i.step || 1)))} disabled={pending} className="px-2.5 py-1.5 text-slate-600">
                     <Plus className="h-3.5 w-3.5" />
                   </button>
                 </div>

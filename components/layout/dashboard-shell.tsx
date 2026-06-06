@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import type { UserRole } from "@prisma/client";
 import { Menu, X, ArrowLeft } from "lucide-react";
 import { NAVS, type NavKey, type NavLink as NavLinkType } from "@/lib/nav";
+import { isStoreOwner } from "@/lib/rbac";
 import { Logo } from "@/components/brand/logo";
 import { UserMenu } from "./user-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -68,6 +69,7 @@ export function DashboardShell({
 }) {
   const [open, setOpen] = useState(false);
   const nav = NAVS[navKey];
+  const items = nav.items.filter((i) => !i.ownerOnly || isStoreOwner(user.role));
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -76,7 +78,7 @@ export function DashboardShell({
         <div className="flex h-16 items-center border-b border-slate-200 px-5">
           <Logo />
         </div>
-        <NavList items={nav.items} title={nav.title} />
+        <NavList items={items} title={nav.title} />
       </aside>
 
       {/* Drawer mobile */}
@@ -90,7 +92,7 @@ export function DashboardShell({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <NavList items={nav.items} title={nav.title} onNavigate={() => setOpen(false)} />
+            <NavList items={items} title={nav.title} onNavigate={() => setOpen(false)} />
           </aside>
         </div>
       )}
