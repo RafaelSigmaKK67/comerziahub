@@ -3,7 +3,7 @@
 > Documento vivo: **atualizado conforme o projeto evolui**. Veja o
 > [Histórico de atualizações](#-histórico-de-atualizações) no fim.
 >
-> **Última atualização:** 2026-06-06
+> **Última atualização:** 2026-07-05
 
 Plataforma de **estoque + delivery + marketplace + rede social comercial**.
 
@@ -86,6 +86,7 @@ feed social, mensagens, cashback e fidelidade. Tema cibernético com alternânci
 
 ## 📜 Histórico de atualizações
 
+- **2026-07-05** — **PWA**: `app/manifest.ts` (manifest.webmanifest) + ícones `public/icon-192/512/512-maskable.png` gerados de `app/icon.svg` via `scripts/gen-icons.mjs` (puppeteer-core + Chrome do sistema) + apple-touch-icon — resolve o único ⚠ do relatório E2E do browser-use. Validações que o relatório não cobriu, feitas localmente (XAMPP): **responsivo** 375×812 e 1920×1080 sem overflow (bottom nav, filtros empilhados, mapa ok no mobile) e **checkout completo** (login → carrinho → pedido `CMZ-TJTBA5`): split por loja, baixa de estoque decimal (80 → 79,9 kg), cashback e snapshot financeiro exatos (lucro R$ 0,09 conferido à mão).
 - **2026-06-06** — Correção de produção: páginas **Início**, **Loja** e **Feed** retornavam 500 porque a `SmartImage` (Client Component) recebia o ícone de fallback como **componente/função** vindo de Server Components (proibido no Next.js). Agora a `SmartImage` recebe `iconName` (string serializável) e mapeia o ícone internamente. Verificado: build OK e páginas voltando **200**.
 - **2026-05-31** — Evolução: **produtos por unidade/peso** (kg/g/L/un…) com preço de custo; **módulo financeiro** (lucro/prejuízo + simuladores de preço, pagamento e venda); **mapas** (Leaflet/OpenStreetMap) na loja; **imagens com fallback**; admin CMS (configurações + excluir/aprovar/suspender lojas e usuários); **paginação** no marketplace; correção de sobreposição de UI; "funcionário" → **vendedor** + hierarquia ADMIN›LOJA›VENDEDOR›ENTREGADOR›CLIENTE; **dump SQL** em `database/`.
 - **2026-05-31** — Tema cibernético + alternância claro/escuro (localStorage); página de **Mensagens** (comprador × vendedor); **produção no ar** (Vercel + Aiven MySQL) com cadastro/login validados; correção de compatibilidade MySQL 8 (PK em `VerificationToken`); seed enriquecido (cupons, emblemas, cashback, conversa); 26 screenshots reais.

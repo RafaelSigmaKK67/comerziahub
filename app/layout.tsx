@@ -20,6 +20,9 @@ export const metadata: Metadata = {
     "lojas online",
   ],
   authors: [{ name: APP.name }],
+  icons: {
+    apple: "/icon-192.png",
+  },
   openGraph: {
     title: APP.name,
     description: APP.description,
