@@ -20,7 +20,7 @@ export function Pagination({
   const idle = "border-slate-300 text-slate-600 hover:bg-slate-100";
 
   return (
-    <nav className="mt-8 flex items-center justify-center gap-1">
+    <nav aria-label="Paginação" className="mt-8 flex items-center justify-center gap-1">
       {page > 1 && (
         <Link href={makeHref(page - 1)} className={cn(base, idle)} aria-label="Anterior">
           ‹

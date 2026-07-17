@@ -33,7 +33,7 @@ export default async function ProductPage({
 
   return (
     <div className="container-page py-8">
-      <nav className="mb-4 text-sm text-slate-500">
+      <nav aria-label="Trilha de navegação" className="mb-4 text-sm text-slate-500">
         <Link href="/marketplace" className="hover:underline">Marketplace</Link>
         {" / "}
         <Link href={`/store/${product.store.slug}`} className="hover:underline">
@@ -84,7 +84,7 @@ export default async function ProductPage({
             {isPromo && (
               <>
                 <span className="text-lg text-slate-400 line-through">{formatCurrency(base)}</span>
-                <Badge className="bg-accent-500 text-white">Promoção</Badge>
+                <Badge className="bg-accent-700 text-white">Promoção</Badge>
               </>
             )}
           </div>

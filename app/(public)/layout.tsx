@@ -9,8 +9,11 @@ export default function PublicLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col">
+      <a href="#conteudo" className="skip-link">
+        Pular para o conteúdo
+      </a>
       <SiteHeader />
-      <main className="flex-1 pb-20 md:pb-0">{children}</main>
+      <main id="conteudo" className="flex-1 pb-20 md:pb-0">{children}</main>
       <SiteFooter />
       <BottomNav />
     </div>

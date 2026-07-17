@@ -17,6 +17,7 @@ export default async function CartPage() {
   if (!user) {
     return (
       <div className="container-page py-16">
+        <h1 className="sr-only">Seu carrinho</h1>
         <EmptyState
           icon={ShoppingCart}
           title="Entre para ver seu carrinho"

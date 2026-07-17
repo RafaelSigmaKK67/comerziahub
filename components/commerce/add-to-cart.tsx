@@ -77,6 +77,7 @@ export function AddToCart({
         <div className="flex items-center rounded-xl border border-slate-300">
           <button
             type="button"
+            aria-label="Diminuir quantidade"
             onClick={() => setQty((q) => r3(Math.max(safeStep, q - safeStep)))}
             className="px-3 py-2.5 text-slate-600 hover:text-slate-900"
           >
@@ -87,6 +88,7 @@ export function AddToCart({
           </span>
           <button
             type="button"
+            aria-label="Aumentar quantidade"
             onClick={() => setQty((q) => r3(q + safeStep))}
             className="px-3 py-2.5 text-slate-600 hover:text-slate-900"
           >

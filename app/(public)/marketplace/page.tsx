@@ -65,8 +65,8 @@ export default async function MarketplacePage({
           <form className="mt-4 space-y-4" action="/marketplace">
             {q && <input type="hidden" name="q" value={q} />}
             <div>
-              <label className="label-base">Categoria</label>
-              <select name="categoryId" defaultValue={categoryId ?? ""} className="input-base">
+              <label htmlFor="filtro-categoria" className="label-base">Categoria</label>
+              <select id="filtro-categoria" name="categoryId" defaultValue={categoryId ?? ""} className="input-base">
                 <option value="">Todas</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -77,17 +77,17 @@ export default async function MarketplacePage({
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="label-base">Preço mín.</label>
-                <input name="minPrice" type="number" min={0} defaultValue={sp.minPrice ?? ""} className="input-base" placeholder="R$" />
+                <label htmlFor="filtro-preco-min" className="label-base">Preço mín.</label>
+                <input id="filtro-preco-min" name="minPrice" type="number" min={0} defaultValue={sp.minPrice ?? ""} className="input-base" placeholder="R$" />
               </div>
               <div>
-                <label className="label-base">Preço máx.</label>
-                <input name="maxPrice" type="number" min={0} defaultValue={sp.maxPrice ?? ""} className="input-base" placeholder="R$" />
+                <label htmlFor="filtro-preco-max" className="label-base">Preço máx.</label>
+                <input id="filtro-preco-max" name="maxPrice" type="number" min={0} defaultValue={sp.maxPrice ?? ""} className="input-base" placeholder="R$" />
               </div>
             </div>
             <div>
-              <label className="label-base">Ordenar por</label>
-              <select name="sort" defaultValue={sort} className="input-base">
+              <label htmlFor="filtro-ordenar" className="label-base">Ordenar por</label>
+              <select id="filtro-ordenar" name="sort" defaultValue={sort} className="input-base">
                 {SORTS.map((s) => (
                   <option key={s.value} value={s.value}>
                     {s.label}

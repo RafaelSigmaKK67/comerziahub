@@ -25,7 +25,7 @@ function NavList({
   const isActive = (i: NavLinkType) =>
     i.exact ? path === i.href : path === i.href || path.startsWith(`${i.href}/`);
   return (
-    <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+    <nav aria-label="Menu do painel" className="flex-1 space-y-1 overflow-y-auto p-3">
       <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
         {title}
       </p>

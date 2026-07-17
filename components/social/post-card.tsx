@@ -53,7 +53,7 @@ export function PostCard({ post, liked }: { post: FeedPost; liked: boolean }) {
           </>
         )}
         {post.type === "PROMOTION" && (
-          <Badge className="ml-auto bg-accent-500 text-white">Promoção</Badge>
+          <Badge className="ml-auto bg-accent-700 text-white">Promoção</Badge>
         )}
       </header>
 

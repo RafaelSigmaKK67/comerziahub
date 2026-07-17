@@ -34,7 +34,7 @@ export function MobileMenu({ authed }: { authed: boolean }) {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <nav className="mt-6 flex flex-col gap-1">
+            <nav aria-label="Menu" className="mt-6 flex flex-col gap-1">
               {links.map((l) => (
                 <Link
                   key={l.href}

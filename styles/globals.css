@@ -78,11 +78,38 @@ html.dark {
   h1, h2, h3, h4 {
     @apply tracking-tight;
   }
+  /* Acessibilidade: anel de foco visível para navegação por teclado
+     (inputs já têm anel próprio via .input-base:focus). */
+  a:focus-visible,
+  button:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 }
 
 @layer components {
   .container-page {
     @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+  /* Link "pular para o conteúdo": invisível até receber foco pelo teclado. */
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    z-index: 100;
+    border-radius: 0 0 0.75rem 0;
+    background-color: var(--brand);
+    color: #fff;
+    padding: 0.6rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  .skip-link:focus {
+    left: 0;
+    top: 0;
   }
   .card {
     border-radius: 1rem;

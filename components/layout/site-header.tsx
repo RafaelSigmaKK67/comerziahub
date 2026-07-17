@@ -23,7 +23,7 @@ export async function SiteHeader() {
         <MobileMenu authed={!!user} />
         <Logo />
 
-        <nav className="ml-2 hidden items-center gap-1 md:flex">
+        <nav aria-label="Navegação principal" className="ml-2 hidden items-center gap-1 md:flex">
           {navLinks.map((l) => (
             <Link
               key={l.href}
@@ -43,6 +43,7 @@ export async function SiteHeader() {
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               name="q"
+              aria-label="Buscar produtos e lojas"
               placeholder="Buscar produtos e lojas..."
               className="input-base pl-9"
             />
@@ -58,7 +59,7 @@ export async function SiteHeader() {
           >
             <ShoppingCart className="h-5 w-5" />
             {cartCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-500 px-1 text-[10px] font-bold text-white">
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-700 px-1 text-[10px] font-bold text-white">
                 {cartCount}
               </span>
             )}

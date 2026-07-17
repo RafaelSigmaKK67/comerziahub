@@ -63,6 +63,7 @@ export default async function HomePage() {
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
                   name="q"
+                  aria-label="Buscar produtos e lojas"
                   placeholder="O que você procura hoje?"
                   className="h-12 w-full rounded-xl border-0 pl-10 pr-3 text-slate-900 outline-none ring-2 ring-transparent focus:ring-accent-400"
                 />

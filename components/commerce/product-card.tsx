@@ -38,7 +38,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
         />
         {isPromo && (
-          <Badge className="absolute left-2 top-2 bg-accent-500 text-white">
+          <Badge className="absolute left-2 top-2 bg-accent-700 text-white">
             Promoção
           </Badge>
         )}
