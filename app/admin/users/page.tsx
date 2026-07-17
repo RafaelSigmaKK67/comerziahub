@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { safeQuery } from "@/lib/safe";
 import { formatDate } from "@/lib/utils";
 import { ROLE_LABELS } from "@/lib/constants";
-import { setUserStatus, deleteUser } from "@/actions/admin";
+import { setUserStatus, deleteUser, createUser, updateUser } from "@/actions/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +19,8 @@ const STATUS_STYLE: Record<string, string> = {
   SUSPENDED: "bg-rose-100 text-rose-700",
   BANNED: "bg-slate-800 text-white",
 };
+
+const ROLE_OPTIONS = ["ADMIN", "MODERATOR", "STORE_OWNER", "SELLER", "COURIER", "CUSTOMER"] as const;
 
 export default async function AdminUsersPage() {
   const users = await safeQuery(
@@ -32,7 +34,37 @@ export default async function AdminUsersPage() {
 
   return (
     <>
-      <PageHeader title="Usuários" description="Todos os perfis cadastrados na plataforma." />
+      <PageHeader
+        title="Usuários"
+        description="Crie, edite, suspenda ou exclua qualquer perfil da plataforma."
+      />
+
+      <Card className="mb-6 p-5">
+        <h2 className="mb-3 text-sm font-semibold text-slate-900">Novo usuário</h2>
+        <form action={createUser} className="flex flex-wrap items-end gap-3">
+          <div>
+            <label className="label-base" htmlFor="novo-nome">Nome</label>
+            <input id="novo-nome" name="name" required className="input-base w-44" placeholder="Nome completo" />
+          </div>
+          <div>
+            <label className="label-base" htmlFor="novo-email">E-mail</label>
+            <input id="novo-email" name="email" type="email" required className="input-base w-56" placeholder="email@exemplo.com" />
+          </div>
+          <div>
+            <label className="label-base" htmlFor="novo-senha">Senha (mín. 6)</label>
+            <input id="novo-senha" name="password" type="password" required minLength={6} className="input-base w-40" />
+          </div>
+          <div>
+            <label className="label-base" htmlFor="novo-papel">Papel</label>
+            <select id="novo-papel" name="role" defaultValue="CUSTOMER" className="input-base w-44">
+              {ROLE_OPTIONS.map((r) => (
+                <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+              ))}
+            </select>
+          </div>
+          <Button type="submit">Criar usuário</Button>
+        </form>
+      </Card>
 
       {users.length === 0 ? (
         <EmptyState icon={Users} title="Nenhum usuário cadastrado" />
@@ -51,7 +83,7 @@ export default async function AdminUsersPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {users.map((u) => (
-                  <tr key={u.id}>
+                  <tr key={u.id} className="align-top">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <Avatar src={u.image} name={u.name} size={34} />
@@ -69,8 +101,31 @@ export default async function AdminUsersPage() {
                       <Badge className={STATUS_STYLE[u.status]}>{u.status}</Badge>
                     </td>
                     <td className="px-4 py-3">
+                      <details>
+                        <summary className="cursor-pointer list-none text-sm font-medium text-brand-600 hover:underline">
+                          Editar
+                        </summary>
+                        <form
+                          action={updateUser.bind(null, u.id)}
+                          className="mt-3 grid w-72 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3"
+                        >
+                          <label className="label-base" htmlFor={`u-nome-${u.id}`}>Nome</label>
+                          <input id={`u-nome-${u.id}`} name="name" defaultValue={u.name} className="input-base" />
+                          <label className="label-base" htmlFor={`u-email-${u.id}`}>E-mail</label>
+                          <input id={`u-email-${u.id}`} name="email" type="email" defaultValue={u.email} className="input-base" />
+                          <label className="label-base" htmlFor={`u-papel-${u.id}`}>Papel</label>
+                          <select id={`u-papel-${u.id}`} name="role" defaultValue={u.role} className="input-base">
+                            {ROLE_OPTIONS.map((r) => (
+                              <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+                            ))}
+                          </select>
+                          <label className="label-base" htmlFor={`u-senha-${u.id}`}>Nova senha (opcional)</label>
+                          <input id={`u-senha-${u.id}`} name="password" type="password" minLength={6} className="input-base" placeholder="deixe em branco p/ manter" />
+                          <Button size="sm" type="submit">Salvar</Button>
+                        </form>
+                      </details>
                       {u.role !== "ADMIN" && (
-                        <div className="flex flex-wrap gap-2">
+                        <div className="mt-2 flex flex-wrap gap-2">
                           {u.status === "ACTIVE" ? (
                             <form action={setUserStatus.bind(null, u.id, "SUSPENDED")}>
                               <Button size="sm" variant="outline" type="submit">Suspender</Button>

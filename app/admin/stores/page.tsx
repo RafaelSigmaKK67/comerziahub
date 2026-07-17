@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { safeQuery } from "@/lib/safe";
 import { formatDate } from "@/lib/utils";
 import { STORE_STATUS_LABELS } from "@/lib/constants";
-import { setStoreStatus, deleteStore } from "@/actions/admin";
+import { setStoreStatus, deleteStore, updateStore } from "@/actions/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -66,7 +66,31 @@ export default async function AdminStoresPage() {
                       <Badge className={STATUS_STYLE[s.status]}>{STORE_STATUS_LABELS[s.status]}</Badge>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-2">
+                      <details>
+                        <summary className="cursor-pointer list-none text-sm font-medium text-brand-600 hover:underline">
+                          Editar
+                        </summary>
+                        <form
+                          action={updateStore.bind(null, s.id)}
+                          className="mt-3 grid w-72 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3"
+                        >
+                          <label className="label-base" htmlFor={`s-nome-${s.id}`}>Nome</label>
+                          <input id={`s-nome-${s.id}`} name="name" defaultValue={s.name} className="input-base" />
+                          <label className="label-base" htmlFor={`s-seg-${s.id}`}>Segmento</label>
+                          <input id={`s-seg-${s.id}`} name="segment" defaultValue={s.segment ?? ""} className="input-base" placeholder="Ex.: Mercado" />
+                          <label className="label-base" htmlFor={`s-status-${s.id}`}>Status</label>
+                          <select id={`s-status-${s.id}`} name="status" defaultValue={s.status} className="input-base">
+                            {Object.entries(STORE_STATUS_LABELS).map(([v, l]) => (
+                              <option key={v} value={v}>{l}</option>
+                            ))}
+                          </select>
+                          <label className="flex items-center gap-2 text-sm text-slate-700">
+                            <input type="checkbox" name="isOpen" defaultChecked={s.isOpen} /> Loja aberta
+                          </label>
+                          <Button size="sm" type="submit">Salvar</Button>
+                        </form>
+                      </details>
+                      <div className="mt-2 flex flex-wrap gap-2">
                         {s.status !== "ACTIVE" && (
                           <form action={setStoreStatus.bind(null, s.id, "ACTIVE")}>
                             <Button size="sm" type="submit">Aprovar</Button>

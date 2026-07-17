@@ -43,6 +43,8 @@ export const NAVS: Record<NavKey, { title: string; items: NavLink[] }> = {
       { label: "Visão geral", href: "/admin", icon: LayoutDashboard, exact: true },
       { label: "Lojas", href: "/admin/stores", icon: Store },
       { label: "Usuários", href: "/admin/users", icon: Users },
+      { label: "Produtos", href: "/admin/products", icon: Package },
+      { label: "Categorias", href: "/admin/categories", icon: Boxes },
       { label: "Pedidos", href: "/admin/orders", icon: ShoppingCart },
       { label: "Rede social", href: "/admin/social", icon: Newspaper },
       { label: "Denúncias", href: "/admin/reports", icon: Flag },
