@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { prisma } from "@/lib/prisma";
 import { safeQuery } from "@/lib/safe";
+import { EditDialog } from "@/components/admin/edit-dialog";
 import { createCategory, updateCategory, deleteCategory } from "@/actions/admin";
 
 export const dynamic = "force-dynamic";
@@ -65,28 +66,24 @@ export default async function AdminCategoriesPage() {
                     <td className="px-4 py-3 text-slate-500">/{c.slug}</td>
                     <td className="px-4 py-3 text-slate-600">{c._count.products}</td>
                     <td className="px-4 py-3">
-                      <details>
-                        <summary className="cursor-pointer list-none text-sm font-medium text-brand-600 hover:underline">
-                          Editar
-                        </summary>
-                        <form
-                          action={updateCategory.bind(null, c.id)}
-                          className="mt-3 flex w-72 flex-wrap items-end gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3"
-                        >
-                          <div>
-                            <label className="label-base" htmlFor={`cat-nome-${c.id}`}>Nome</label>
-                            <input id={`cat-nome-${c.id}`} name="name" defaultValue={c.name} className="input-base w-40" />
-                          </div>
-                          <div>
-                            <label className="label-base" htmlFor={`cat-icone-${c.id}`}>Ícone</label>
-                            <input id={`cat-icone-${c.id}`} name="icon" defaultValue={c.icon ?? ""} className="input-base w-20" />
-                          </div>
-                          <Button size="sm" type="submit">Salvar</Button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <EditDialog title={`Editar categoria — ${c.name}`}>
+                          <form action={updateCategory.bind(null, c.id)} className="grid gap-3">
+                            <div>
+                              <label className="label-base" htmlFor={`cat-nome-${c.id}`}>Nome</label>
+                              <input id={`cat-nome-${c.id}`} name="name" defaultValue={c.name} className="input-base" />
+                            </div>
+                            <div>
+                              <label className="label-base" htmlFor={`cat-icone-${c.id}`}>Ícone (emoji)</label>
+                              <input id={`cat-icone-${c.id}`} name="icon" defaultValue={c.icon ?? ""} className="input-base" />
+                            </div>
+                            <Button type="submit">Salvar alterações</Button>
+                          </form>
+                        </EditDialog>
+                        <form action={deleteCategory.bind(null, c.id)}>
+                          <Button size="sm" variant="danger" type="submit">Excluir</Button>
                         </form>
-                      </details>
-                      <form action={deleteCategory.bind(null, c.id)} className="mt-2">
-                        <Button size="sm" variant="danger" type="submit">Excluir</Button>
-                      </form>
+                      </div>
                     </td>
                   </tr>
                 ))}

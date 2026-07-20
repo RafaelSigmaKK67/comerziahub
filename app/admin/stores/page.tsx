@@ -4,11 +4,11 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EditDialog } from "@/components/admin/edit-dialog";
 import { prisma } from "@/lib/prisma";
 import { safeQuery } from "@/lib/safe";
-import { formatDate } from "@/lib/utils";
 import { STORE_STATUS_LABELS } from "@/lib/constants";
-import { setStoreStatus, deleteStore, updateStore } from "@/actions/admin";
+import { setStoreStatus, deleteStore, updateStore, createStoreAdmin } from "@/actions/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -20,21 +20,73 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 export default async function AdminStoresPage() {
-  const stores = await safeQuery(
-    () =>
-      prisma.store.findMany({
-        orderBy: { createdAt: "desc" },
-        include: {
-          owner: { select: { name: true, email: true } },
-          _count: { select: { products: true, orders: true } },
-        },
-      }),
-    [],
-  );
+  const [stores, owners] = await Promise.all([
+    safeQuery(
+      () =>
+        prisma.store.findMany({
+          orderBy: { createdAt: "desc" },
+          include: {
+            owner: { select: { name: true, email: true } },
+            _count: { select: { products: true, orders: true } },
+          },
+        }),
+      [],
+    ),
+    safeQuery(
+      () =>
+        prisma.user.findMany({
+          where: { role: { in: ["STORE_OWNER", "CUSTOMER", "SELLER"] } },
+          orderBy: { name: "asc" },
+          select: { id: true, name: true, email: true },
+          take: 200,
+        }),
+      [],
+    ),
+  ]);
 
   return (
     <>
-      <PageHeader title="Lojas" description="Aprovação e moderação de lojas da plataforma." />
+      <PageHeader
+        title="Lojas"
+        description="Crie, edite, aprove, suspenda ou exclua qualquer loja."
+        action={
+          <EditDialog trigger="Nova loja" title="Nova loja" variant="primary" size="md">
+            <form action={createStoreAdmin} className="grid gap-3">
+              <div>
+                <label className="label-base" htmlFor="nl-nome">Nome</label>
+                <input id="nl-nome" name="name" required className="input-base" placeholder="Nome da loja" />
+              </div>
+              <div>
+                <label className="label-base" htmlFor="nl-dono">Dono</label>
+                <select id="nl-dono" name="ownerId" required className="input-base">
+                  {owners.map((o) => (
+                    <option key={o.id} value={o.id}>{o.name} — {o.email}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label-base" htmlFor="nl-seg">Segmento</label>
+                  <input id="nl-seg" name="segment" className="input-base" placeholder="Ex.: Mercado" />
+                </div>
+                <div>
+                  <label className="label-base" htmlFor="nl-status">Status</label>
+                  <select id="nl-status" name="status" defaultValue="ACTIVE" className="input-base">
+                    {Object.entries(STORE_STATUS_LABELS).map(([v, l]) => (
+                      <option key={v} value={v}>{l}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="label-base" htmlFor="nl-desc">Descrição</label>
+                <input id="nl-desc" name="description" className="input-base" placeholder="Sobre a loja (opcional)" />
+              </div>
+              <Button type="submit">Criar loja</Button>
+            </form>
+          </EditDialog>
+        }
+      />
 
       {stores.length === 0 ? (
         <EmptyState icon={StoreIcon} title="Nenhuma loja cadastrada" />
@@ -66,37 +118,36 @@ export default async function AdminStoresPage() {
                       <Badge className={STATUS_STYLE[s.status]}>{STORE_STATUS_LABELS[s.status]}</Badge>
                     </td>
                     <td className="px-4 py-3">
-                      <details>
-                        <summary className="cursor-pointer list-none text-sm font-medium text-brand-600 hover:underline">
-                          Editar
-                        </summary>
-                        <form
-                          action={updateStore.bind(null, s.id)}
-                          className="mt-3 grid w-72 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3"
-                        >
-                          <label className="label-base" htmlFor={`s-nome-${s.id}`}>Nome</label>
-                          <input id={`s-nome-${s.id}`} name="name" defaultValue={s.name} className="input-base" />
-                          <label className="label-base" htmlFor={`s-seg-${s.id}`}>Segmento</label>
-                          <input id={`s-seg-${s.id}`} name="segment" defaultValue={s.segment ?? ""} className="input-base" placeholder="Ex.: Mercado" />
-                          <label className="label-base" htmlFor={`s-status-${s.id}`}>Status</label>
-                          <select id={`s-status-${s.id}`} name="status" defaultValue={s.status} className="input-base">
-                            {Object.entries(STORE_STATUS_LABELS).map(([v, l]) => (
-                              <option key={v} value={v}>{l}</option>
-                            ))}
-                          </select>
-                          <label className="flex items-center gap-2 text-sm text-slate-700">
-                            <input type="checkbox" name="isOpen" defaultChecked={s.isOpen} /> Loja aberta
-                          </label>
-                          <Button size="sm" type="submit">Salvar</Button>
-                        </form>
-                      </details>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {s.status !== "ACTIVE" && (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <EditDialog title={`Editar loja — ${s.name}`}>
+                          <form action={updateStore.bind(null, s.id)} className="grid gap-3">
+                            <div>
+                              <label className="label-base" htmlFor={`s-nome-${s.id}`}>Nome</label>
+                              <input id={`s-nome-${s.id}`} name="name" defaultValue={s.name} className="input-base" />
+                            </div>
+                            <div>
+                              <label className="label-base" htmlFor={`s-seg-${s.id}`}>Segmento</label>
+                              <input id={`s-seg-${s.id}`} name="segment" defaultValue={s.segment ?? ""} className="input-base" placeholder="Ex.: Mercado" />
+                            </div>
+                            <div>
+                              <label className="label-base" htmlFor={`s-status-${s.id}`}>Status</label>
+                              <select id={`s-status-${s.id}`} name="status" defaultValue={s.status} className="input-base">
+                                {Object.entries(STORE_STATUS_LABELS).map(([v, l]) => (
+                                  <option key={v} value={v}>{l}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <label className="flex items-center gap-2 text-sm text-slate-700">
+                              <input type="checkbox" name="isOpen" defaultChecked={s.isOpen} /> Loja aberta
+                            </label>
+                            <Button type="submit">Salvar alterações</Button>
+                          </form>
+                        </EditDialog>
+                        {s.status !== "ACTIVE" ? (
                           <form action={setStoreStatus.bind(null, s.id, "ACTIVE")}>
                             <Button size="sm" type="submit">Aprovar</Button>
                           </form>
-                        )}
-                        {s.status === "ACTIVE" && (
+                        ) : (
                           <form action={setStoreStatus.bind(null, s.id, "SUSPENDED")}>
                             <Button size="sm" variant="outline" type="submit">Suspender</Button>
                           </form>

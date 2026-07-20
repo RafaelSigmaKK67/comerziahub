@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { prisma } from "@/lib/prisma";
 import { safeQuery } from "@/lib/safe";
 import { formatCurrency, toNumber } from "@/lib/utils";
+import { EditDialog } from "@/components/admin/edit-dialog";
 import { createPlan, updatePlan, deletePlan } from "@/actions/admin";
 
 export const dynamic = "force-dynamic";
@@ -77,15 +78,15 @@ export default async function AdminPlansPage() {
       <PageHeader
         title="Planos"
         description="Crie, edite ou exclua os planos de assinatura das lojas e suas taxas."
+        action={
+          <EditDialog trigger="Novo plano" title="Novo plano" variant="primary" size="md">
+            <form action={createPlan} className="flex flex-wrap items-end gap-3">
+              <PlanFields prefix="novo-plano" />
+              <Button type="submit">Criar plano</Button>
+            </form>
+          </EditDialog>
+        }
       />
-
-      <Card className="mb-6 p-5">
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">Novo plano</h2>
-        <form action={createPlan} className="flex flex-wrap items-end gap-3">
-          <PlanFields prefix="novo-plano" />
-          <Button type="submit">Criar plano</Button>
-        </form>
-      </Card>
 
       {plans.length === 0 ? (
         <EmptyState icon={CreditCard} title="Nenhum plano cadastrado" description="Crie o primeiro plano acima." />
@@ -110,21 +111,20 @@ export default async function AdminPlansPage() {
               </p>
               <p className="mt-1 text-sm text-slate-500">{p._count.subscriptions} loja(s) assinante(s)</p>
 
-              <details className="mt-4">
-                <summary className="cursor-pointer list-none text-sm font-medium text-brand-600 hover:underline">
-                  Editar
-                </summary>
-                <form
-                  action={updatePlan.bind(null, p.id)}
-                  className="mt-3 flex flex-wrap items-end gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3"
-                >
-                  <PlanFields prefix={`plano-${p.id}`} plan={p} />
-                  <Button size="sm" type="submit">Salvar</Button>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <EditDialog title={`Editar plano — ${p.name}`}>
+                  <form
+                    action={updatePlan.bind(null, p.id)}
+                    className="flex flex-wrap items-end gap-3"
+                  >
+                    <PlanFields prefix={`plano-${p.id}`} plan={p} />
+                    <Button type="submit">Salvar alterações</Button>
+                  </form>
+                </EditDialog>
+                <form action={deletePlan.bind(null, p.id)}>
+                  <Button size="sm" variant="danger" type="submit">Excluir</Button>
                 </form>
-              </details>
-              <form action={deletePlan.bind(null, p.id)} className="mt-2">
-                <Button size="sm" variant="danger" type="submit">Excluir</Button>
-              </form>
+              </div>
             </Card>
           ))}
         </div>

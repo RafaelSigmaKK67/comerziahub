@@ -4,10 +4,16 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EditDialog } from "@/components/admin/edit-dialog";
 import { prisma } from "@/lib/prisma";
 import { safeQuery } from "@/lib/safe";
 import { formatRelative } from "@/lib/utils";
-import { setPostVisibility } from "@/actions/admin";
+import {
+  setPostVisibility,
+  createPostAdmin,
+  updatePostAdmin,
+  deletePostAdmin,
+} from "@/actions/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +34,37 @@ export default async function AdminSocialPage() {
 
   return (
     <>
-      <PageHeader title="Moderação da rede social" description="Acompanhe e modere as publicações." />
+      <PageHeader
+        title="Rede social"
+        description="Crie publicações oficiais, edite, oculte ou exclua qualquer post."
+        action={
+          <EditDialog trigger="Nova publicação" title="Nova publicação" variant="primary" size="md">
+            <form action={createPostAdmin} className="grid gap-3">
+              <div>
+                <label className="label-base" htmlFor="post-conteudo">Conteúdo</label>
+                <textarea
+                  id="post-conteudo"
+                  name="content"
+                  required
+                  rows={4}
+                  className="input-base"
+                  placeholder="Escreva o comunicado ou novidade da plataforma..."
+                />
+              </div>
+              <div>
+                <label className="label-base" htmlFor="post-tipo">Tipo</label>
+                <select id="post-tipo" name="type" defaultValue="NEWS" className="input-base">
+                  <option value="NEWS">Novidade</option>
+                  <option value="TEXT">Texto</option>
+                  <option value="PROMOTION">Promoção</option>
+                </select>
+              </div>
+              <Button type="submit">Publicar</Button>
+            </form>
+          </EditDialog>
+        }
+      />
+
       {posts.length === 0 ? (
         <EmptyState icon={Newspaper} title="Nenhuma publicação ainda" />
       ) : (
@@ -55,15 +91,36 @@ export default async function AdminSocialPage() {
                   {p._count.likes} curtidas · {p._count.comments} comentários · {formatRelative(p.createdAt)}
                 </p>
               </div>
-              {p.status === "PUBLISHED" ? (
-                <form action={setPostVisibility.bind(null, p.id, "HIDDEN")}>
-                  <Button size="sm" variant="outline" type="submit">Ocultar</Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <EditDialog title={`Editar publicação de ${p.store?.name ?? p.author.name}`}>
+                  <form action={updatePostAdmin.bind(null, p.id)} className="grid gap-3">
+                    <div>
+                      <label className="label-base" htmlFor={`post-${p.id}`}>Conteúdo</label>
+                      <textarea
+                        id={`post-${p.id}`}
+                        name="content"
+                        required
+                        rows={4}
+                        defaultValue={p.content ?? ""}
+                        className="input-base"
+                      />
+                    </div>
+                    <Button type="submit">Salvar alterações</Button>
+                  </form>
+                </EditDialog>
+                {p.status === "PUBLISHED" ? (
+                  <form action={setPostVisibility.bind(null, p.id, "HIDDEN")}>
+                    <Button size="sm" variant="outline" type="submit">Ocultar</Button>
+                  </form>
+                ) : (
+                  <form action={setPostVisibility.bind(null, p.id, "PUBLISHED")}>
+                    <Button size="sm" type="submit">Restaurar</Button>
+                  </form>
+                )}
+                <form action={deletePostAdmin.bind(null, p.id)}>
+                  <Button size="sm" variant="danger" type="submit">Excluir</Button>
                 </form>
-              ) : (
-                <form action={setPostVisibility.bind(null, p.id, "PUBLISHED")}>
-                  <Button size="sm" type="submit">Restaurar</Button>
-                </form>
-              )}
+              </div>
             </Card>
           ))}
         </div>

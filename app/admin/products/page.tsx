@@ -4,11 +4,12 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EditDialog } from "@/components/admin/edit-dialog";
 import { prisma } from "@/lib/prisma";
 import { safeQuery } from "@/lib/safe";
 import { formatCurrency, formatQuantity, toNumber } from "@/lib/utils";
-import { UNIT_LABELS } from "@/lib/constants";
-import { adminUpdateProduct, adminDeleteProduct } from "@/actions/admin";
+import { UNIT_LABELS, UNIT_OPTIONS } from "@/lib/constants";
+import { adminUpdateProduct, adminDeleteProduct, createProductAdmin } from "@/actions/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -26,32 +27,102 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default async function AdminProductsPage() {
-  const products = await safeQuery(
-    () =>
-      prisma.product.findMany({
-        orderBy: { createdAt: "desc" },
-        take: 200,
-        select: {
-          id: true,
-          name: true,
-          basePrice: true,
-          promoPrice: true,
-          costPrice: true,
-          stock: true,
-          unit: true,
-          status: true,
-          isFeatured: true,
-          store: { select: { name: true } },
-        },
-      }),
-    [],
-  );
+  const [products, stores, categories] = await Promise.all([
+    safeQuery(
+      () =>
+        prisma.product.findMany({
+          orderBy: { createdAt: "desc" },
+          take: 200,
+          select: {
+            id: true,
+            name: true,
+            basePrice: true,
+            promoPrice: true,
+            costPrice: true,
+            stock: true,
+            unit: true,
+            status: true,
+            isFeatured: true,
+            store: { select: { name: true } },
+          },
+        }),
+      [],
+    ),
+    safeQuery(
+      () => prisma.store.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+      [],
+    ),
+    safeQuery(
+      () =>
+        prisma.category.findMany({
+          where: { storeId: null },
+          orderBy: { name: "asc" },
+          select: { id: true, name: true },
+        }),
+      [],
+    ),
+  ]);
 
   return (
     <>
       <PageHeader
         title="Produtos"
-        description="Todos os produtos da plataforma — edite preço, estoque, status e destaque, ou exclua."
+        description="Todos os produtos da plataforma — crie, edite preço/estoque/status ou exclua."
+        action={
+          <EditDialog trigger="Novo produto" title="Novo produto" variant="primary" size="md">
+            <form action={createProductAdmin} className="grid gap-3">
+              <div>
+                <label className="label-base" htmlFor="np-nome">Nome</label>
+                <input id="np-nome" name="name" required className="input-base" placeholder="Ex.: Suco de laranja 1L" />
+              </div>
+              <div>
+                <label className="label-base" htmlFor="np-loja">Loja</label>
+                <select id="np-loja" name="storeId" required className="input-base">
+                  {stores.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label-base" htmlFor="np-cat">Categoria</label>
+                  <select id="np-cat" name="categoryId" defaultValue="" className="input-base">
+                    <option value="">Sem categoria</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="label-base" htmlFor="np-unidade">Vendido por</label>
+                  <select id="np-unidade" name="unit" defaultValue="UN" className="input-base">
+                    {UNIT_OPTIONS.map((u) => (
+                      <option key={u.value} value={u.value}>{u.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="label-base" htmlFor="np-preco">Preço (R$)</label>
+                  <input id="np-preco" name="basePrice" type="number" step="0.01" min={0} required className="input-base" />
+                </div>
+                <div>
+                  <label className="label-base" htmlFor="np-custo">Custo (R$)</label>
+                  <input id="np-custo" name="costPrice" type="number" step="0.01" min={0} className="input-base" placeholder="—" />
+                </div>
+                <div>
+                  <label className="label-base" htmlFor="np-estoque">Estoque</label>
+                  <input id="np-estoque" name="stock" type="number" step="0.001" min={0} required className="input-base" />
+                </div>
+              </div>
+              <p className="text-xs text-slate-500">
+                A foto é escolhida automaticamente pela palavra-chave do nome do produto.
+              </p>
+              <Button type="submit">Criar produto</Button>
+            </form>
+          </EditDialog>
+        }
       />
 
       {products.length === 0 ? (
@@ -72,7 +143,7 @@ export default async function AdminProductsPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {products.map((p) => (
-                  <tr key={p.id} className="align-top">
+                  <tr key={p.id}>
                     <td className="px-4 py-3">
                       <p className="font-medium text-slate-800">{p.name}</p>
                       {p.isFeatured && <Badge className="mt-1 bg-brand-50 text-brand-700">Destaque</Badge>}
@@ -93,51 +164,51 @@ export default async function AdminProductsPage() {
                       <Badge className={STATUS_STYLE[p.status]}>{STATUS_LABEL[p.status]}</Badge>
                     </td>
                     <td className="px-4 py-3">
-                      <details className="group">
-                        <summary className="cursor-pointer list-none text-sm font-medium text-brand-600 hover:underline">
-                          Editar
-                        </summary>
-                        <form
-                          action={adminUpdateProduct.bind(null, p.id)}
-                          className="mt-3 grid w-72 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3"
-                        >
-                          <label className="label-base" htmlFor={`nome-${p.id}`}>Nome</label>
-                          <input id={`nome-${p.id}`} name="name" defaultValue={p.name} className="input-base" />
-                          <div className="grid grid-cols-2 gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <EditDialog title={`Editar produto — ${p.name}`}>
+                          <form action={adminUpdateProduct.bind(null, p.id)} className="grid gap-3">
                             <div>
-                              <label className="label-base" htmlFor={`preco-${p.id}`}>Preço (R$)</label>
-                              <input id={`preco-${p.id}`} name="basePrice" type="number" step="0.01" min={0} defaultValue={toNumber(p.basePrice)} className="input-base" />
+                              <label className="label-base" htmlFor={`nome-${p.id}`}>Nome</label>
+                              <input id={`nome-${p.id}`} name="name" defaultValue={p.name} className="input-base" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="label-base" htmlFor={`preco-${p.id}`}>Preço (R$)</label>
+                                <input id={`preco-${p.id}`} name="basePrice" type="number" step="0.01" min={0} defaultValue={toNumber(p.basePrice)} className="input-base" />
+                              </div>
+                              <div>
+                                <label className="label-base" htmlFor={`promo-${p.id}`}>Promoção (R$)</label>
+                                <input id={`promo-${p.id}`} name="promoPrice" type="number" step="0.01" min={0} defaultValue={p.promoPrice != null ? toNumber(p.promoPrice) : ""} className="input-base" placeholder="—" />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="label-base" htmlFor={`custo-${p.id}`}>Custo (R$)</label>
+                                <input id={`custo-${p.id}`} name="costPrice" type="number" step="0.01" min={0} defaultValue={p.costPrice != null ? toNumber(p.costPrice) : ""} className="input-base" placeholder="—" />
+                              </div>
+                              <div>
+                                <label className="label-base" htmlFor={`estoque-${p.id}`}>Estoque</label>
+                                <input id={`estoque-${p.id}`} name="stock" type="number" step="0.001" min={0} defaultValue={toNumber(p.stock)} className="input-base" />
+                              </div>
                             </div>
                             <div>
-                              <label className="label-base" htmlFor={`promo-${p.id}`}>Promo (R$)</label>
-                              <input id={`promo-${p.id}`} name="promoPrice" type="number" step="0.01" min={0} defaultValue={p.promoPrice != null ? toNumber(p.promoPrice) : ""} className="input-base" placeholder="—" />
+                              <label className="label-base" htmlFor={`status-${p.id}`}>Status</label>
+                              <select id={`status-${p.id}`} name="status" defaultValue={p.status} className="input-base">
+                                {Object.entries(STATUS_LABEL).map(([v, l]) => (
+                                  <option key={v} value={v}>{l}</option>
+                                ))}
+                              </select>
                             </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="label-base" htmlFor={`custo-${p.id}`}>Custo (R$)</label>
-                              <input id={`custo-${p.id}`} name="costPrice" type="number" step="0.01" min={0} defaultValue={p.costPrice != null ? toNumber(p.costPrice) : ""} className="input-base" placeholder="—" />
-                            </div>
-                            <div>
-                              <label className="label-base" htmlFor={`estoque-${p.id}`}>Estoque</label>
-                              <input id={`estoque-${p.id}`} name="stock" type="number" step="0.001" min={0} defaultValue={toNumber(p.stock)} className="input-base" />
-                            </div>
-                          </div>
-                          <label className="label-base" htmlFor={`status-${p.id}`}>Status</label>
-                          <select id={`status-${p.id}`} name="status" defaultValue={p.status} className="input-base">
-                            {Object.entries(STATUS_LABEL).map(([v, l]) => (
-                              <option key={v} value={v}>{l}</option>
-                            ))}
-                          </select>
-                          <label className="flex items-center gap-2 text-sm text-slate-700">
-                            <input type="checkbox" name="isFeatured" defaultChecked={p.isFeatured} /> Destaque na home
-                          </label>
-                          <Button size="sm" type="submit">Salvar</Button>
+                            <label className="flex items-center gap-2 text-sm text-slate-700">
+                              <input type="checkbox" name="isFeatured" defaultChecked={p.isFeatured} /> Destaque na home
+                            </label>
+                            <Button type="submit">Salvar alterações</Button>
+                          </form>
+                        </EditDialog>
+                        <form action={adminDeleteProduct.bind(null, p.id)}>
+                          <Button size="sm" variant="danger" type="submit">Excluir</Button>
                         </form>
-                      </details>
-                      <form action={adminDeleteProduct.bind(null, p.id)} className="mt-2">
-                        <Button size="sm" variant="danger" type="submit">Excluir</Button>
-                      </form>
+                      </div>
                     </td>
                   </tr>
                 ))}

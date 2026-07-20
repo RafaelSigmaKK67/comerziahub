@@ -45,7 +45,7 @@ export default async function ProductPage({
         {/* Galeria */}
         <div>
           <div className="aspect-square overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-            <SmartImage src={images[0].url} alt={product.name} fallbackText={product.name} className="h-full w-full object-cover" />
+            <SmartImage src={images[0].url} alt={product.name} fallbackText={product.name} className="h-full w-full object-contain" />
           </div>
           {images.length > 1 && (
             <div className="mt-3 grid grid-cols-5 gap-2">

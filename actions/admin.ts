@@ -279,6 +279,113 @@ export async function adminSetOrderStatus(orderId: string, formData: FormData): 
   revalidatePath("/admin/orders");
 }
 
+// ---- Criar loja / produto ---------------------------------------------------
+
+/** Imagem por palavra-chave (bate com o nome, não é aleatória). */
+function keywordImage(name: string) {
+  const tag = encodeURIComponent(slugify(name).split("-")[0] || "shopping");
+  return `https://loremflickr.com/800/800/${tag}?lock=7`;
+}
+
+export async function createStoreAdmin(formData: FormData): Promise<void> {
+  const admin = await requireAdmin();
+  if (!admin) return;
+  const name = str(formData.get("name"));
+  const ownerId = str(formData.get("ownerId"));
+  if (!name || !ownerId) return;
+  try {
+    await prisma.store.create({
+      data: {
+        name,
+        slug: slugify(name),
+        ownerId,
+        segment: str(formData.get("segment")) || null,
+        description: str(formData.get("description")) || null,
+        status: (str(formData.get("status")) || "ACTIVE") as StoreStatus,
+        logoUrl: keywordImage(str(formData.get("segment")) || name),
+      },
+    });
+    // dono vira STORE_OWNER caso ainda seja cliente
+    await prisma.user.updateMany({
+      where: { id: ownerId, role: "CUSTOMER" },
+      data: { role: "STORE_OWNER" },
+    });
+  } catch {
+    // slug duplicado
+  }
+  revalidatePath("/admin/stores");
+  revalidatePath("/admin");
+}
+
+export async function createProductAdmin(formData: FormData): Promise<void> {
+  const admin = await requireAdmin();
+  if (!admin) return;
+  const name = str(formData.get("name"));
+  const storeId = str(formData.get("storeId"));
+  if (!name || !storeId) return;
+  try {
+    await prisma.product.create({
+      data: {
+        name,
+        slug: `${slugify(name)}-${Date.now().toString(36)}`,
+        storeId,
+        categoryId: str(formData.get("categoryId")) || null,
+        basePrice: num(formData.get("basePrice")),
+        costPrice: str(formData.get("costPrice")) ? num(formData.get("costPrice")) : null,
+        stock: num(formData.get("stock")),
+        unit: (str(formData.get("unit")) || "UN") as never,
+        status: "ACTIVE",
+        images: { create: { url: keywordImage(name), isPrimary: true } },
+      },
+    });
+  } catch {
+    // noop
+  }
+  revalidatePath("/admin/products");
+  revalidatePath("/marketplace");
+}
+
+// ---- Rede social (criar/editar/excluir) ------------------------------------
+
+export async function createPostAdmin(formData: FormData): Promise<void> {
+  const admin = await requireAdmin();
+  if (!admin) return;
+  const content = str(formData.get("content"));
+  if (!content) return;
+  await prisma.post.create({
+    data: {
+      authorId: admin.id,
+      content,
+      type: (str(formData.get("type")) || "NEWS") as never,
+      status: "PUBLISHED",
+    },
+  });
+  revalidatePath("/admin/social");
+  revalidatePath("/feed");
+}
+
+export async function updatePostAdmin(postId: string, formData: FormData): Promise<void> {
+  const admin = await requireAdmin();
+  if (!admin) return;
+  const content = str(formData.get("content"));
+  if (!content) return;
+  await prisma.post.update({ where: { id: postId }, data: { content } });
+  revalidatePath("/admin/social");
+  revalidatePath("/feed");
+}
+
+export async function deletePostAdmin(postId: string): Promise<void> {
+  const admin = await requireAdmin();
+  if (!admin) return;
+  try {
+    await prisma.post.delete({ where: { id: postId } });
+  } catch {
+    await prisma.post.update({ where: { id: postId }, data: { status: "REMOVED" } });
+  }
+  revalidatePath("/admin/social");
+  revalidatePath("/feed");
+}
+
 // ---- Planos -----------------------------------------------------------------
 
 export async function createPlan(formData: FormData): Promise<void> {

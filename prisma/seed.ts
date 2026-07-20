@@ -43,8 +43,42 @@ const WEEK_HOURS = Array.from({ length: 7 }, (_, weekday) => ({
   isClosed: weekday === 0, // domingo fechado
 }));
 
+/**
+ * Fotos CURADAS que correspondem ao nome do produto/loja (CDN do Unsplash,
+ * rápido e estável) — nada de imagem aleatória. Cada URL foi testada:
+ * carrega e mostra o assunto certo (banana → bananas, camiseta → camiseta…).
+ */
+const foto = (id: string) => `https://images.unsplash.com/${id}?w=800&h=800&fit=crop&q=70`;
+const banner = (id: string) => `https://images.unsplash.com/${id}?w=1200&h=400&fit=crop&q=70`;
+
+const IMG_URLS: Record<string, string> = {
+  "banana-prata-kg": foto("photo-1571771894821-ce9b6c11b08e"), // bananas
+  "maca-gala-kg": foto("photo-1560806887-1e4cd0b6cbd6"), // maçã vermelha
+  "tomate-italiano-kg": foto("photo-1546094096-0df4bcaaa337"), // tomates
+  "alface-crespa": foto("photo-1622206151226-18ca2c9ab4a1"), // alface
+  "x-burger-artesanal": foto("photo-1568901346375-23c9450c58cd"), // hambúrguer
+  "batata-cheddar": foto("photo-1573080496219-bb080dd4f877"), // batata frita
+  "combo-casal": foto("photo-1550547660-d9450f859349"), // combo lanche
+  "refri-lata": foto("photo-1554866585-cd94860890b7"), // lata de refrigerante
+  "camiseta-basica": foto("photo-1521572163474-6864f9cf17ab"), // camiseta
+  "moletom-canguru": foto("photo-1556821840-3a63f95609a7"), // moletom
+  "bone-aba-reta": foto("photo-1521369909029-2afed882baee"), // boné
+  "meia-cano-alto": foto("photo-1586350977771-b3b0abd50c82"), // meias
+  "hortifruti-do-bairro-logo": foto("photo-1540420773420-3366772f4999"), // vegetais
+  "hortifruti-do-bairro-banner": banner("photo-1542838132-92c53300491e"), // feira
+  "lanchonete-sabor-logo": foto("photo-1568901346375-23c9450c58cd"), // hambúrguer
+  "lanchonete-sabor-banner": banner("photo-1517248135467-4c7edcad34c4"), // restaurante
+  "moda-urbana-logo": foto("photo-1489987707025-afc232f7ea0f"), // araras de roupa
+  "moda-urbana-banner": banner("photo-1441986300917-64674bd600d8"), // loja de moda
+  "promo-frutas": foto("photo-1619566636858-adf3ef46400b"), // frutas
+};
+
 function img(seed: string) {
-  return `https://picsum.photos/seed/${seed}/800/800`;
+  if (IMG_URLS[seed]) return IMG_URLS[seed];
+  // fallback por palavra-chave para itens sem foto curada (ex.: emblemas)
+  let lock = 0;
+  for (const ch of seed) lock = (lock * 31 + ch.charCodeAt(0)) % 997;
+  return `https://loremflickr.com/400/400/badge?lock=${lock}`;
 }
 
 async function main() {
@@ -209,7 +243,10 @@ async function main() {
   for (const s of storesData) {
     const store = await prisma.store.upsert({
       where: { slug: s.slug },
-      update: {},
+      update: {
+        logoUrl: img(`${s.slug}-logo`),
+        bannerUrl: img(`${s.slug}-banner`),
+      },
       create: {
         slug: s.slug,
         name: s.name,
@@ -315,6 +352,11 @@ async function main() {
               }
             : {}),
         },
+      });
+      // Atualiza a foto também em bancos já populados (upsert só cria na 1ª vez)
+      await prisma.productImage.updateMany({
+        where: { productId: product.id },
+        data: { url: img(p.slug) },
       });
       createdProducts.push({ id: product.id, storeId: store.id, price: p.promo ?? p.price, name: p.name });
     }
