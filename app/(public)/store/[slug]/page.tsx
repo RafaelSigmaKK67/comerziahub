@@ -31,21 +31,22 @@ export default async function StorePage({
 
   return (
     <div>
-      {/* Banner */}
-      <div className="relative h-40 bg-gradient-to-r from-brand-500 to-brand-700 sm:h-56">
+      {/* Banner (capa) — contido na própria faixa, nunca invade o conteúdo */}
+      <div className="relative h-40 overflow-hidden bg-gradient-to-r from-brand-500 to-brand-700 sm:h-56">
         {store.bannerUrl && (
           <SmartImage src={store.bannerUrl} alt="" fallbackText={store.name} className="h-full w-full object-cover" />
         )}
       </div>
 
       <div className="container-page">
-        {/* Cabeçalho */}
-        <div className="-mt-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex items-end gap-4">
-            <span className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-3xl border-4 border-white bg-brand-100 text-brand-600 shadow-card">
+        {/* Cabeçalho: só o logo sobrepõe a capa; nome/avaliação ficam sempre
+            abaixo do banner (texto sobre foto clara ficava ilegível). */}
+        <div className="relative z-10 -mt-12 flex flex-col gap-4 sm:flex-row sm:justify-between">
+          <div className="flex items-start gap-4">
+            <span className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-3xl border-4 border-white bg-brand-100 text-brand-600 shadow-card">
               <SmartImage src={store.logoUrl} alt={store.name} iconName="store" className="h-full w-full object-cover" />
             </span>
-            <div className="pb-1">
+            <div className="pt-14">
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold text-slate-900">{store.name}</h1>
                 <Badge className={store.isOpen ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"}>
@@ -59,7 +60,7 @@ export default async function StorePage({
             </div>
           </div>
 
-          <div className="flex gap-2 pb-1">
+          <div className="flex gap-2 sm:self-end sm:pb-1">
             {user ? (
               <form action={toggleStoreFollow.bind(null, store.id)}>
                 <Button variant={following ? "outline" : "primary"} type="submit">
