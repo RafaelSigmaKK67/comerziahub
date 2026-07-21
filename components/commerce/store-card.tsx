@@ -31,7 +31,7 @@ export function StoreCard({ store }: { store: StoreCardData }) {
         )}
       </div>
       <div className="px-4 pb-4">
-        <div className="-mt-7 mb-2 flex items-end justify-between">
+        <div className="relative z-10 -mt-7 mb-2 flex items-end justify-between">
           <span className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border-4 border-white bg-brand-100 text-brand-600 shadow-sm">
             <SmartImage src={store.logoUrl} alt={store.name} iconName="store" className="h-full w-full object-cover" />
           </span>
