@@ -68,6 +68,7 @@ export function SmartImage({
       src={src as string}
       alt={alt}
       loading="lazy"
+      decoding="async"
       className={className}
       onError={() => setErrored(true)}
     />

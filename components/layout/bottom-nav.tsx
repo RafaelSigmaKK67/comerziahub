@@ -16,7 +16,7 @@ const items = [
 export function BottomNav() {
   const path = usePathname();
   return (
-    <nav aria-label="Navegação inferior" className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur md:hidden">
+    <nav aria-label="Navegação inferior" className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 md:hidden">
       <div className="grid grid-cols-5">
         {items.map((it) => {
           const active = it.exact ? path === it.href : path.startsWith(it.href);

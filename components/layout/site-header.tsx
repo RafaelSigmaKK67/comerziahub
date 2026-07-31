@@ -18,7 +18,7 @@ export async function SiteHeader() {
   const cartCount = user ? await getCartItemCount(user.id) : 0;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95">
       <div className="container-page flex h-16 items-center gap-3">
         <MobileMenu authed={!!user} />
         <Logo />

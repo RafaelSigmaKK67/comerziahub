@@ -89,7 +89,7 @@ export default async function HomePage() {
           <div className="hidden items-center justify-center md:flex">
             <div className="grid w-full max-w-sm grid-cols-2 gap-4">
               {pillars.slice(0, 4).map((p) => (
-                <div key={p.title} className="rounded-2xl bg-white/10 p-5 backdrop-blur">
+                <div key={p.title} className="rounded-2xl bg-white/15 p-5">
                   <p.icon className="h-7 w-7 text-accent-300" />
                   <p className="mt-3 font-semibold">{p.title}</p>
                   <p className="mt-1 text-sm text-brand-100">{p.desc}</p>

@@ -32,10 +32,11 @@
 }
 
 html.dark {
-  /* DARK (cyberpunk) */
+  /* DARK (cyberpunk) — painéis quase opacos: mantêm o visual "vidro" sem
+     precisar de backdrop-filter (pesado em GPUs fracas). */
   --bg: #05060f;
-  --panel: rgba(18, 20, 38, 0.72);
-  --panel-soft: rgba(30, 33, 60, 0.55);
+  --panel: rgba(18, 20, 38, 0.94);
+  --panel-soft: rgba(30, 33, 60, 0.88);
   --border: rgba(140, 150, 255, 0.16);
   --border-soft: rgba(140, 150, 255, 0.10);
   --fg: #e8ebfb;
@@ -73,7 +74,19 @@ html.dark {
       radial-gradient(1100px 560px at 82% -8%, rgba(124, 77, 255, 0.22), transparent 60%),
       radial-gradient(820px 520px at -5% 4%, rgba(34, 211, 238, 0.12), transparent 55%),
       linear-gradient(180deg, #070815 0%, #05060f 60%);
-    background-attachment: fixed;
+    /* sem background-attachment: fixed — forçava repintura da tela inteira a
+       cada rolagem e travava em computadores mais fracos */
+    background-repeat: no-repeat;
+  }
+  /* Respeita quem ativa "reduzir movimento" no sistema (e alivia PCs fracos) */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
   h1, h2, h3, h4 {
     @apply tracking-tight;
@@ -117,10 +130,8 @@ html.dark {
     background-color: var(--panel);
     box-shadow: var(--card-shadow);
   }
-  html.dark .card {
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
-  }
+  /* (sem backdrop-filter nos cards — painel quase opaco dá o mesmo efeito
+     com custo de GPU muito menor) */
   .input-base {
     @apply w-full rounded-xl px-3.5 py-2.5 text-sm outline-none transition;
     background-color: var(--panel-soft);
@@ -158,8 +169,6 @@ html.dark .bg-white\/80,
 html.dark .bg-white\/70,
 html.dark .bg-white\/60 {
   background-color: var(--panel);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
 }
 
 html.dark .bg-slate-50 {
