@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { safeQuery } from "@/lib/safe";
+import { memo } from "@/lib/memo-cache";
 import type { Prisma } from "@prisma/client";
 
 const storeCard = {
@@ -32,12 +33,14 @@ const productCard = {
 export async function getActiveStores(limit = 12) {
   return safeQuery(
     () =>
-      prisma.store.findMany({
-        where: { status: "ACTIVE" },
-        orderBy: [{ ratingAvg: "desc" }, { followerCount: "desc" }],
-        take: limit,
-        select: storeCard,
-      }),
+      memo(`activeStores:${limit}`, () =>
+        prisma.store.findMany({
+          where: { status: "ACTIVE" },
+          orderBy: [{ ratingAvg: "desc" }, { followerCount: "desc" }],
+          take: limit,
+          select: storeCard,
+        }),
+      ),
     [],
   );
 }
@@ -46,18 +49,20 @@ export async function listStores(opts: { q?: string; segment?: string }) {
   const { q, segment } = opts;
   return safeQuery(
     () =>
-      prisma.store.findMany({
-        where: {
-          status: "ACTIVE",
-          ...(segment ? { segment } : {}),
-          ...(q
-            ? { name: { contains: q } }
-            : {}),
-        },
-        orderBy: { ratingAvg: "desc" },
-        take: 48,
-        select: storeCard,
-      }),
+      memo(`listStores:${q ?? ""}:${segment ?? ""}`, () =>
+        prisma.store.findMany({
+          where: {
+            status: "ACTIVE",
+            ...(segment ? { segment } : {}),
+            ...(q
+              ? { name: { contains: q } }
+              : {}),
+          },
+          orderBy: { ratingAvg: "desc" },
+          take: 48,
+          select: storeCard,
+        }),
+      ),
     [],
   );
 }
@@ -65,21 +70,44 @@ export async function listStores(opts: { q?: string; segment?: string }) {
 export async function getStoreBySlug(slug: string) {
   return safeQuery(
     () =>
-      prisma.store.findUnique({
-        where: { slug },
-        include: {
-          settings: true,
-          businessHours: { orderBy: { weekday: "asc" } },
-          owner: { select: { id: true, name: true, image: true } },
-          address: true,
-          _count: { select: { followers: true, products: true, reviews: true } },
-          products: {
-            where: { status: { in: ["ACTIVE", "OUT_OF_STOCK"] } },
+      memo(`store:${slug}`, async () => {
+        // Consultas independentes em PARALELO: o Prisma carrega cada relação
+        // aninhada em uma query separada e SEQUENCIAL; com o banco em outra
+        // região cada ida custa ~200ms, então o tempo de parede cai de
+        // ~8 round-trips para o máximo do grupo (~4).
+        const [store, businessHours, products, counts] = await Promise.all([
+          prisma.store.findUnique({
+            where: { slug },
+            include: {
+              settings: true,
+              owner: { select: { id: true, name: true, image: true } },
+              address: true,
+            },
+          }),
+          prisma.businessHour.findMany({
+            where: { store: { slug } },
+            orderBy: { weekday: "asc" },
+          }),
+          prisma.product.findMany({
+            where: { store: { slug }, status: { in: ["ACTIVE", "OUT_OF_STOCK"] } },
             orderBy: { salesCount: "desc" },
             take: 24,
             select: productCard,
-          },
-        },
+          }),
+          prisma.store.findUnique({
+            where: { slug },
+            select: {
+              _count: { select: { followers: true, products: true, reviews: true } },
+            },
+          }),
+        ]);
+        if (!store) return null;
+        return {
+          ...store,
+          businessHours,
+          products,
+          _count: counts?._count ?? { followers: 0, products: 0, reviews: 0 },
+        };
       }),
     null,
   );
@@ -88,12 +116,14 @@ export async function getStoreBySlug(slug: string) {
 export async function getFeaturedProducts(limit = 10) {
   return safeQuery(
     () =>
-      prisma.product.findMany({
-        where: { status: "ACTIVE", isFeatured: true },
-        orderBy: { createdAt: "desc" },
-        take: limit,
-        select: productCard,
-      }),
+      memo(`featured:${limit}`, () =>
+        prisma.product.findMany({
+          where: { status: "ACTIVE", isFeatured: true },
+          orderBy: { createdAt: "desc" },
+          take: limit,
+          select: productCard,
+        }),
+      ),
     [],
   );
 }
@@ -101,12 +131,14 @@ export async function getFeaturedProducts(limit = 10) {
 export async function getBestSellers(limit = 10) {
   return safeQuery(
     () =>
-      prisma.product.findMany({
-        where: { status: "ACTIVE" },
-        orderBy: { salesCount: "desc" },
-        take: limit,
-        select: productCard,
-      }),
+      memo(`bestSellers:${limit}`, () =>
+        prisma.product.findMany({
+          where: { status: "ACTIVE" },
+          orderBy: { salesCount: "desc" },
+          take: limit,
+          select: productCard,
+        }),
+      ),
     [],
   );
 }
@@ -144,20 +176,22 @@ export async function searchProducts(opts: {
       : {}),
   };
 
+  const key = `search:${q ?? ""}:${categoryId ?? ""}:${minPrice ?? ""}:${maxPrice ?? ""}:${sort}:${page}:${perPage}`;
   return safeQuery(
-    async () => {
-      const [items, total] = await Promise.all([
-        prisma.product.findMany({
-          where,
-          orderBy,
-          take: perPage,
-          skip: (page - 1) * perPage,
-          select: productCard,
-        }),
-        prisma.product.count({ where }),
-      ]);
-      return { items, total, pages: Math.max(1, Math.ceil(total / perPage)) };
-    },
+    () =>
+      memo(key, async () => {
+        const [items, total] = await Promise.all([
+          prisma.product.findMany({
+            where,
+            orderBy,
+            take: perPage,
+            skip: (page - 1) * perPage,
+            select: productCard,
+          }),
+          prisma.product.count({ where }),
+        ]);
+        return { items, total, pages: Math.max(1, Math.ceil(total / perPage)) };
+      }),
     { items: [], total: 0, pages: 1 },
   );
 }
@@ -165,32 +199,52 @@ export async function searchProducts(opts: {
 export async function getProductById(id: string) {
   return safeQuery(
     () =>
-      prisma.product.findUnique({
-        where: { id },
-        include: {
-          images: { orderBy: { position: "asc" } },
-          variants: { orderBy: { position: "asc" } },
-          category: true,
-          store: {
-            select: {
-              id: true,
-              slug: true,
-              name: true,
-              logoUrl: true,
-              ratingAvg: true,
-              ratingCount: true,
-              isOpen: true,
-              settings: { select: { cashbackEnabled: true } },
+      memo(`product:${id}`, async () => {
+        // Mesmo racional do getStoreBySlug: relações independentes em paralelo
+        // (antes: 8 round-trips sequenciais ao banco).
+        const [product, images, variants, reviews, reviewCount] = await Promise.all([
+          prisma.product.findUnique({
+            where: { id },
+            include: {
+              category: true,
+              store: {
+                select: {
+                  id: true,
+                  slug: true,
+                  name: true,
+                  logoUrl: true,
+                  ratingAvg: true,
+                  ratingCount: true,
+                  isOpen: true,
+                  settings: { select: { cashbackEnabled: true } },
+                },
+              },
             },
-          },
-          reviews: {
-            where: { type: "PRODUCT" },
+          }),
+          prisma.productImage.findMany({
+            where: { productId: id },
+            orderBy: { position: "asc" },
+          }),
+          prisma.productVariant.findMany({
+            where: { productId: id },
+            orderBy: { position: "asc" },
+          }),
+          prisma.review.findMany({
+            where: { productId: id, type: "PRODUCT" },
             orderBy: { createdAt: "desc" },
             take: 8,
             include: { author: { select: { name: true, image: true } } },
-          },
-          _count: { select: { reviews: true } },
-        },
+          }),
+          prisma.review.count({ where: { productId: id } }),
+        ]);
+        if (!product) return null;
+        return {
+          ...product,
+          images,
+          variants,
+          reviews,
+          _count: { reviews: reviewCount },
+        };
       }),
     null,
   );
@@ -199,11 +253,13 @@ export async function getProductById(id: string) {
 export async function listCategories() {
   return safeQuery(
     () =>
-      prisma.category.findMany({
-        where: { parentId: null, storeId: null },
-        orderBy: { name: "asc" },
-        include: { _count: { select: { products: true } } },
-      }),
+      memo("categories", () =>
+        prisma.category.findMany({
+          where: { parentId: null, storeId: null },
+          orderBy: { name: "asc" },
+          include: { _count: { select: { products: true } } },
+        }),
+      ),
     [],
   );
 }
