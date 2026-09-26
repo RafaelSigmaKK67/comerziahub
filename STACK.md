@@ -3,7 +3,7 @@
 > Documento vivo: **atualizado conforme o projeto evolui**. Veja o
 > [Histórico de atualizações](#-histórico-de-atualizações) no fim.
 >
-> **Última atualização:** 2026-07-05
+> **Última atualização:** 2026-09-26
 
 Plataforma de **estoque + delivery + marketplace + rede social comercial**.
 
@@ -24,12 +24,13 @@ Plataforma de **estoque + delivery + marketplace + rede social comercial**.
 | Financeiro | módulo de lucro/prejuízo + simuladores (`lib/finance.ts`) |
 | Produtos | venda por unidade **ou peso** (kg, g, L, un, caixa…) com preço de custo |
 
-## 🗄️ Banco de dados — **MySQL / MariaDB**
+## 🗄️ Banco de dados — **PostgreSQL (Supabase)**
 
 | Ambiente | Onde | Detalhe |
 |----------|------|---------|
-| Local | **XAMPP / phpMyAdmin** | banco `estoque_delivery` (`localhost:3306`) |
-| Produção | **Aiven** (MySQL gerenciado) | configurado via env `DATABASE_URL` na Vercel |
+| Local + Produção | **Supabase** (São Paulo, `sa-east-1`) | mesmo banco nos dois; app usa a string *pooled* (6543, pgbouncer) e migrations a direta (5432) |
+
+> Histórico: MySQL/XAMPP local + Aiven em produção até 2026-09-26 (Aiven ficava em Bengaluru — causa raiz do delay).
 
 ## ☁️ Plataformas / hospedagem
 
@@ -85,6 +86,9 @@ feed social, mensagens, cashback e fidelidade. Tema cibernético com alternânci
 ---
 
 ## 📜 Histórico de atualizações
+
+- **2026-09-26** — **Migração de banco: Aiven/MySQL (Bengaluru) → Supabase/PostgreSQL (São Paulo)** + função Vercel movida para `gru1` via `vercel.json`. Motivo: o Aiven ficava na Índia e cada ida ao banco custava ~200ms (páginas de 1,7–6s). Resultado medido em produção: **TTFB 0,11–0,21s em todas as rotas**. Mudanças: `provider postgresql` + `directUrl` no schema; busca com `mode: "insensitive"` (Postgres diferencia maiúsculas); `DATABASE_URL` (pooled/pgbouncer) + `DIRECT_URL` na Vercel; login validado ponta a ponta. XAMPP/MySQL local aposentado (o local usa o mesmo Supabase); `database/comerziahub.sql` virou legado.
+- **2026-09-20** — **Fix do delay em produção**: cache em memória TTL 60s (`lib/memo-cache.ts`) nas leituras públicas do catálogo + relações independentes em `Promise.all` em `getStoreBySlug`/`getProductById` (8 → ~4/3 round-trips). Navegação quente caiu de 0,9–1,9s para ~0,25s ainda no Aiven.
 
 - **2026-07-06** — **Desempenho p/ PCs fracos + sobreposição nos cards**: removido `backdrop-filter: blur(14px)` de todos os cards/painéis do tema escuro (painéis quase opacos dão o mesmo visual) e o `background-attachment: fixed` do fundo (repintava a tela a cada rolagem); headers fixos e bottom-nav sem `backdrop-blur`; suporte a `prefers-reduced-motion`; `decoding="async"` nas imagens. Fix no `StoreCard`: fileira do logo com `relative z-10` — o logo pinta por cima do banner (antes o banner posicionado cobria a metade de cima do logo). Git do repo configurado com `http.version HTTP/1.1` + low-speed abort (pushes travavam silenciosamente).
 - **2026-07-05** — **Admin em modais + fotos reais**: edição/criação no admin agora abre em **modal sobreposto com fundo desfocado** (`EditDialog`, portal + `role="dialog"`, fecha com Esc/clique fora/após salvar); botões `Editar/Suspender/Excluir` padronizados na mesma linha. Admin também **cria lojas** (com dono), **produtos** (com loja/categoria/unidade) e **publicações oficiais na rede social** (criar/editar/excluir). Fotos do seed trocadas de picsum aleatório para **URLs curadas do Unsplash que correspondem ao nome** (banana→banana, boné→boné…), aplicadas no XAMPP e no Aiven; galeria do produto usa `object-contain` (foto inteira, sem corte).

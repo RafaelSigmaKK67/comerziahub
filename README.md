@@ -27,7 +27,7 @@ ComerziaHub reúne, em um só sistema, um **controle de estoque**, um **aplicati
 
 - **[Next.js 15](https://nextjs.org/)** (App Router) — frontend + backend (Server Components, Server Actions, Route Handlers)
 - **TypeScript**
-- **[Prisma ORM](https://www.prisma.io/)** + **MySQL / MariaDB** (compatível com **XAMPP/phpMyAdmin**; PostgreSQL também funciona trocando o `provider` em `schema.prisma`)
+- **[Prisma ORM](https://www.prisma.io/)** + **PostgreSQL** ([Supabase](https://supabase.com), região São Paulo — o mesmo banco serve o local e a produção)
 - **[Auth.js / NextAuth v5](https://authjs.dev/)** — autenticação por credenciais com papéis (RBAC) e proteção de rotas via middleware
 - **[Tailwind CSS](https://tailwindcss.com/)** — identidade visual própria, responsiva
 - **[Zod](https://zod.dev/)** — validação de dados
@@ -110,7 +110,7 @@ Hierarquia: **ADMIN GERAL › DONO DE LOJA › VENDEDOR › ENTREGADOR › CLIEN
 
 ### Pré-requisitos
 - **Node.js 18.18+** (recomendado 20 ou 22)
-- **MySQL 8 / MariaDB 10.4+** — ex.: **XAMPP** (phpMyAdmin) rodando localmente. Para produção: PlanetScale, Railway, Aiven, etc.
+- Um projeto **[Supabase](https://supabase.com)** gratuito (PostgreSQL) — crie na região **South America (São Paulo)**. Não precisa instalar banco na máquina.
 
 ### Passos
 
@@ -137,25 +137,18 @@ npm run dev
 
 Acesse **http://localhost:3000**.
 
-### Banco com XAMPP (phpMyAdmin)
+### Banco (Supabase / PostgreSQL)
 
-1. No **XAMPP Control Panel**, dê **Start** em **Apache** e **MySQL**.
-2. Em http://localhost/phpmyadmin crie um banco **`estoque_delivery`** (collation `utf8mb4_unicode_ci`).
-3. No `.env`: `DATABASE_URL="mysql://root@localhost:3306/estoque_delivery"` *(root sem senha é o padrão do XAMPP)*.
-4. `npm run db:push` cria as tabelas e `npm run db:seed` popula os dados — visíveis depois no phpMyAdmin.
+1. Crie um projeto em https://supabase.com (região **South America — São Paulo**) e guarde a senha do banco.
+2. No Dashboard: **Connect → aba ORMs (Prisma)** — copie as duas strings para o `.env`:
+   - `DATABASE_URL` = *Transaction pooler* (porta **6543**) com `&pgbouncer=true` no final;
+   - `DIRECT_URL` = conexão direta (porta **5432**).
+   Se a senha tiver caracteres especiais, codifique-a na URL (ex.: `@` vira `%40`).
+3. `npm run db:push` cria as tabelas e `npm run db:seed` popula os dados de exemplo —
+   visíveis depois no **Table Editor** do Supabase.
 
-### Opção rápida: importar o dump pronto
-
-Já existe um **dump completo** com dados de exemplo em **`database/comerziahub.sql`**
-(lojas, produtos com unidades/kg/custos, pedidos, cashback, fidelidade, emblemas,
-cupons, mensagens, publicações e avaliações). Para usar em vez do seed:
-
-- **phpMyAdmin:** aba *Importar* → selecione `database/comerziahub.sql` → *Executar*.
-- **Linha de comando:**
-  ```bash
-  mysql -u root < database/comerziahub.sql
-  ```
-O dump já cria o banco `estoque_delivery`. Depois é só `npm run dev`.
+> Legado: `database/comerziahub.sql` é o dump da época do MySQL/XAMPP — não é
+> compatível com PostgreSQL; ficou no repositório apenas como histórico.
 
 ---
 
@@ -181,7 +174,8 @@ Copie `.env.example` para `.env`. Principais:
 
 | Variável | Obrigatória | Descrição |
 |----------|:----------:|-----------|
-| `DATABASE_URL` | ✅ | String de conexão MySQL/MariaDB (ex.: `mysql://root@localhost:3306/estoque_delivery`) |
+| `DATABASE_URL` | ✅ | Conexão PostgreSQL **pooled** do Supabase (porta 6543, `?pgbouncer=true`) |
+| `DIRECT_URL` | ✅ | Conexão PostgreSQL **direta** do Supabase (porta 5432) — usada por `db:push`/migrations |
 | `AUTH_SECRET` | ✅ | Segredo do Auth.js (`npx auth secret`) |
 | `AUTH_URL` / `NEXTAUTH_URL` | ⚠️ | URL pública (produção) |
 | `NEXT_PUBLIC_APP_URL` | — | URL pública do app |
@@ -196,17 +190,14 @@ Copie `.env.example` para `.env`. Principais:
 ## ▲ Deploy na Vercel
 
 1. **Importe o repositório** do GitHub na Vercel (framework detectado automaticamente: Next.js).
-2. **Banco de dados**: provisione um **MySQL** gerenciado (PlanetScale, Railway, Aiven…) e copie a connection string.
+2. **Banco de dados**: use o mesmo projeto **Supabase** do desenvolvimento (região São Paulo — o `vercel.json` já fixa a função em `gru1`, ao lado do banco).
 3. **Variáveis de ambiente** no projeto da Vercel:
-   - `DATABASE_URL` = sua connection string MySQL (provedores gerenciados costumam exigir SSL, ex.: `?sslaccept=strict`)
+   - `DATABASE_URL` = string *pooled* do Supabase (porta 6543, `?pgbouncer=true`)
+   - `DIRECT_URL` = string direta do Supabase (porta 5432)
    - `AUTH_SECRET` = segredo aleatório
    - `AUTH_URL` / `NEXTAUTH_URL` = URL do deploy (ex.: `https://comerziahub.vercel.app`)
 4. **Build**: o comando padrão (`prisma generate && next build`) já está em `package.json`.
-5. Após o primeiro deploy, **aplique o schema e o seed** apontando para o banco de produção:
-   ```bash
-   DATABASE_URL="<sua-url-de-producao>" npm run db:deploy   # ou db:push
-   DATABASE_URL="<sua-url-de-producao>" npm run db:seed
-   ```
+5. Schema e seed são aplicados uma vez, do seu computador: `npm run db:push` e `npm run db:seed` (o `.env` já aponta para o Supabase).
 
 ---
 
