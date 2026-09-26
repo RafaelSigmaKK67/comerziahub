@@ -19,8 +19,9 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql" // Supabase (antes: MySQL/Aiven)
+  url       = env("DATABASE_URL") // string POOLED (pgbouncer, porta 6543) — app/serverless
+  directUrl = env("DIRECT_URL") // string DIRETA (porta 5432) — db push/migrations/seed
 }
 
 // ======================== ENUMS ============================================

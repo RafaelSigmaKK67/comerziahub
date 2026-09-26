@@ -55,7 +55,7 @@ export async function listStores(opts: { q?: string; segment?: string }) {
             status: "ACTIVE",
             ...(segment ? { segment } : {}),
             ...(q
-              ? { name: { contains: q } }
+              ? { name: { contains: q, mode: "insensitive" } }
               : {}),
           },
           orderBy: { ratingAvg: "desc" },
@@ -165,7 +165,7 @@ export async function searchProducts(opts: {
   const where: Prisma.ProductWhereInput = {
     status: "ACTIVE",
     ...(categoryId ? { categoryId } : {}),
-    ...(q ? { name: { contains: q } } : {}),
+    ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
     ...(minPrice || maxPrice
       ? {
           basePrice: {
